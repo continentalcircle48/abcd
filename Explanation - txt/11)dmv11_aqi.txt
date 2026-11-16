@@ -1,0 +1,847 @@
+#DMV-5 : AQI - Analyzing Air Quality Index (AQI) Trends in a City
+
+import pandas as pd
+import matplotlib.pyplot as plt
+
+# Load dataset
+url = "https://raw.githubusercontent.com/adityarc19/aqi-india/refs/heads/main/city_day.csv"
+df = pd.read_csv(url)
+
+# Explore dataset
+print(df.head())
+print(df.info())
+
+df = df[df["City"] == "Mumbai"].copy()
+
+# Handle missing values
+df = df.dropna(subset=["AQI", "PM2.5", "PM10", "CO"])
+
+# Convert date column
+df["Date"] = pd.to_datetime(df["Date"])
+df = df.sort_values("Date")
+
+# Extract year
+df["Year"] = df["Date"].dt.year
+
+# Line plot - AQI trend
+plt.figure(figsize=(10, 4))
+plt.plot(df["Date"], df["AQI"], color="blue")
+plt.title("AQI Trend in Mumbai")
+plt.xlabel("Date")
+plt.ylabel("AQI")
+plt.show()
+
+# Line plot - Pollutant levels
+plt.figure(figsize=(10, 4))
+plt.plot(df["Date"], df["PM2.5"], label="PM2.5")
+plt.plot(df["Date"], df["PM10"], label="PM10")
+plt.title("Pollutant Levels in Mumbai")
+plt.xlabel("Date")
+plt.ylabel("Pollutant Level")
+plt.legend()
+plt.show()
+
+# Bar plot - Average AQI by year
+yearly_aqi = df.groupby("Year")["AQI"].mean()
+
+plt.bar(yearly_aqi.index, yearly_aqi.values, color="orange")
+plt.title("Average AQI by Year")
+plt.xlabel("Year")
+plt.ylabel("Average AQI")
+plt.show()
+
+# Box plot - AQI distribution
+plt.boxplot(df["AQI"].dropna())
+plt.title("AQI Distribution")
+plt.ylabel("AQI")
+plt.show()
+
+# Scatter plot - PM2.5 vs AQI
+plt.scatter(df["PM2.5"], df["AQI"], color="green")
+plt.title("PM2.5 vs AQI")
+plt.xlabel("PM2.5")
+plt.ylabel("AQI")
+plt.show()
+
+print("AQI Visualization Completed Successfully!")
+
+
+
+###############################################################################################################################
+###############################################################################################################################
+###############################################################################################################################
+
+
+
+DMV PRACTICAL 5
+AQI – ANALYZING AIR QUALITY INDEX (AQI) TRENDS IN A CITY
+City selected: Mumbai
+
+============================================================
+1. PRACTICAL OVERVIEW
+============================================================
+
+Problem statement:
+Analyze Air Quality Index (AQI) trends in a city using a dataset.
+The notebook selects Mumbai, handles selected missing values,
+converts and sorts dates, extracts the year, and visualizes AQI
+and pollutant information using different charts.
+
+Dataset:
+The notebook loads the India city-wise daily air-quality dataset
+(city_day.csv) from GitHub.
+
+Original dataset:
+- 29,531 rows.
+- 16 columns.
+- 13 numerical columns and 3 object/text columns.
+- City and Date identify the city and observation date.
+- Pollutant columns include PM2.5, PM10, NO, NO2, NOx, NH3,
+  CO, SO2, O3, Benzene, Toluene and Xylene.
+- AQI stores the Air Quality Index.
+- AQI_Bucket stores the AQI category/bucket.
+
+The notebook filters the dataset to Mumbai and analyzes:
+- AQI over time.
+- PM2.5 and PM10 levels over time.
+- Average AQI by year.
+- AQI distribution.
+- Relationship between PM2.5 and AQI.
+
+============================================================
+2. CODE VERIFICATION
+============================================================
+
+Overall verdict:
+The notebook follows the main practical workflow and the
+displayed outputs show that it runs successfully. It loads the
+dataset, selects Mumbai, removes rows missing selected columns,
+converts and sorts dates, extracts years, and produces five
+visualizations: AQI trend, pollutant trend, yearly average AQI,
+AQI box plot and PM2.5-versus-AQI scatter plot.
+
+Important observations and limitations:
+
+1. Only selected missing values are removed:
+   The code uses:
+       df = df.dropna(subset=["AQI", "PM2.5", "PM10", "CO"])
+
+   A row is removed if any one of these four columns is missing.
+   Missing values in other pollutant columns are not necessarily
+   removed. This is acceptable for the selected analyses, but
+   other plots or calculations may still encounter missing values.
+
+2. Year column is created:
+   The code extracts Year from Date, and uses it to group AQI
+   values by year. This is appropriate for yearly analysis.
+
+3. Date sorting:
+   The code sorts the Mumbai records by Date before plotting.
+   This is important because a line chart should connect
+   observations in chronological order.
+
+4. AQI trend graph:
+   The first line chart plots Date against AQI. It shows daily
+   variation in Mumbai's AQI across the available period.
+   The visible chart on page 2 has noticeable peaks around late
+   2018/early 2019 and late 2019/early 2020, followed by a decline
+   during parts of 2020.
+
+5. Pollutant line chart:
+   The second line chart plots PM2.5 and PM10 against Date.
+   It compares how the two particulate pollutant measurements
+   vary over time. PM10 is generally higher than PM2.5 in the
+   displayed chart.
+
+6. Yearly AQI bar chart:
+   The code groups by Year and calculates mean AQI. The output
+   chart on page 3 displays three yearly bars, for 2018, 2019
+   and 2020. These are the years remaining after filtering and
+   dropping rows with missing AQI, PM2.5, PM10 or CO.
+
+7. Box plot:
+   The box plot uses df["AQI"].dropna(). It shows the median,
+   quartiles, whiskers and potential outliers in the selected
+   Mumbai AQI observations. The plotted outlier points show
+   unusually high AQI readings.
+
+8. Scatter plot:
+   The scatter plot compares PM2.5 on the x-axis with AQI on
+   the y-axis. The visible points generally show an upward
+   pattern: higher PM2.5 values are often associated with
+   higher AQI values. This indicates an association in this
+   dataset, not proof that PM2.5 alone causes the AQI value.
+
+9. No AQI category classification is performed:
+   Although the original dataset contains AQI_Bucket, the
+   notebook does not use it in the analysis or charts.
+
+10. No missing-value imputation is performed:
+    The notebook drops rows missing the selected fields rather
+    than replacing missing values with a mean, median or other
+    value. Be clear about this distinction if asked.
+
+11. Dataset time range:
+    The original dataset contains records from multiple cities
+    and dates. After filtering to Mumbai and dropping rows with
+    missing selected fields, the displayed charts cover roughly
+    April 2018 to July 2020. The yearly bar chart therefore
+    shows 2018, 2019 and 2020, not every year in the original
+    dataset.
+
+12. AQI meaning:
+    AQI is an index used to communicate air quality and the
+    potential health implications of air pollution. Higher AQI
+    values generally indicate poorer air quality. The exact
+    category interpretation depends on the AQI standard used.
+
+============================================================
+3. IMPORTANT CODE CHUNKS AND EXPLANATIONS
+============================================================
+
+A. LOAD THE DATASET
+
+Code:
+    url = "https://raw.githubusercontent.com/adityarc19/aqi-india/refs/heads/main/city_day.csv"
+    df = pd.read_csv(url)
+
+Explanation:
+The notebook loads the city_day.csv dataset directly from a
+GitHub URL using Pandas read_csv().
+
+The data is stored in a DataFrame named df. Each row represents
+a city's air-quality observation for a particular date.
+
+B. EXPLORE THE DATASET
+
+Code:
+    print(df.head())
+    print(df.info())
+
+Explanation:
+head() displays the first five rows to show the structure and
+sample values.
+
+info() displays the number of rows and columns, non-null counts
+and data types.
+
+The original dataset contains 29,531 rows and 16 columns.
+City and Date are object columns, most pollutant measurements
+and AQI are float64, and AQI_Bucket is an object column.
+
+This exploration helps us understand the available variables
+and identify missing data.
+
+C. FILTER THE DATA FOR MUMBAI
+
+Code:
+    df = df[df["City"] == "Mumbai"].copy()
+
+Explanation:
+The condition df["City"] == "Mumbai" creates a Boolean result:
+True for Mumbai rows and False for all other cities.
+
+Using this condition inside df selects only Mumbai records.
+
+copy() creates a separate DataFrame copy, so later changes can
+be made to the selected city data.
+
+This step changes the focus from all cities in the dataset to
+one city: Mumbai.
+
+D. HANDLE MISSING VALUES
+
+Code:
+    df = df.dropna(
+        subset=["AQI", "PM2.5", "PM10", "CO"]
+    )
+
+Explanation:
+dropna() removes rows that contain a missing value in any of
+the columns listed in subset.
+
+The notebook requires these columns because:
+- AQI is used for the AQI trend, yearly average and distribution.
+- PM2.5 is used in pollutant analysis and the scatter plot.
+- PM10 is used in pollutant analysis.
+- CO is included as another required data-quality condition.
+
+This is row removal, not imputation. The code does not fill
+missing values with an average or another replacement value.
+
+E. CONVERT DATE AND SORT RECORDS
+
+Code:
+    df["Date"] = pd.to_datetime(df["Date"])
+    df = df.sort_values("Date")
+
+Explanation:
+pd.to_datetime() converts Date from text/object format into
+Pandas datetime format.
+
+sort_values("Date") arranges the records in chronological order,
+from earlier dates to later dates.
+
+Why is sorting important?
+A line chart connects points in the order supplied. Sorting
+ensures the line follows the actual time sequence instead of
+jumping between dates.
+
+F. EXTRACT THE YEAR
+
+Code:
+    df["Year"] = df["Date"].dt.year
+
+Explanation:
+The .dt.year accessor extracts the year part from each datetime
+value.
+
+For example:
+- 2018-04-01 becomes 2018.
+- 2019-01-15 becomes 2019.
+
+The extracted year is stored in a new column called Year. It is
+used later to calculate average AQI for each year.
+
+G. LINE PLOT – AQI TREND
+
+Code:
+    plt.figure(figsize=(10, 4))
+    plt.plot(df["Date"], df["AQI"], color="blue")
+    plt.title("AQI Trend in Mumbai")
+    plt.xlabel("Date")
+    plt.ylabel("AQI")
+    plt.show()
+
+Explanation:
+This line chart displays how AQI changes over time in Mumbai.
+
+- X-axis: Date.
+- Y-axis: AQI.
+- Each point represents the AQI observation on a date.
+- The line connects observations chronologically.
+
+A line chart is suitable because Date is a time-based variable.
+It helps identify changes, peaks, drops and longer-term patterns.
+
+The graph on page 2 shows considerable daily variation and
+periods of higher AQI, especially around late 2018/early 2019
+and late 2019/early 2020.
+
+H. LINE PLOT – POLLUTANT LEVELS
+
+Code:
+    plt.figure(figsize=(10, 4))
+    plt.plot(df["Date"], df["PM2.5"], label="PM2.5")
+    plt.plot(df["Date"], df["PM10"], label="PM10")
+    plt.title("Pollutant Levels in Mumbai")
+    plt.xlabel("Date")
+    plt.ylabel("Pollutant Level")
+    plt.legend()
+    plt.show()
+
+Explanation:
+This chart displays two pollutant measurements over time.
+
+- X-axis: Date.
+- Y-axis: Pollutant level.
+- First line: PM2.5.
+- Second line: PM10.
+- legend() identifies which line represents each pollutant.
+
+PM2.5 refers to fine particulate matter with a diameter of
+2.5 micrometres or smaller. PM10 refers to particulate matter
+with a diameter of 10 micrometres or smaller.
+
+The chart helps compare how the two pollutant levels change
+over the selected period. In the displayed graph, PM10 is
+generally higher than PM2.5.
+
+I. BAR PLOT – AVERAGE AQI BY YEAR
+
+Code:
+    yearly_aqi = df.groupby("Year")["AQI"].mean()
+
+    plt.bar(
+        yearly_aqi.index,
+        yearly_aqi.values,
+        color="orange"
+    )
+    plt.title("Average AQI by Year")
+    plt.xlabel("Year")
+    plt.ylabel("Average AQI")
+    plt.show()
+
+Explanation:
+groupby("Year") groups the records according to their year.
+
+["AQI"] selects the AQI column, and mean() calculates the
+average AQI within each year.
+
+The result yearly_aqi is a Pandas Series:
+- Index: Year.
+- Values: Average AQI for that year.
+
+plt.bar() creates a bar chart to compare average AQI across
+the years.
+
+The chart on page 3 shows bars for 2018, 2019 and 2020.
+The 2019 bar is slightly higher than the 2018 and 2020 bars
+in the displayed output.
+
+J. BOX PLOT – AQI DISTRIBUTION
+
+Code:
+    plt.boxplot(df["AQI"].dropna())
+    plt.title("AQI Distribution")
+    plt.ylabel("AQI")
+    plt.show()
+
+Explanation:
+A box plot summarizes the distribution of a numerical variable.
+
+It displays:
+- Median: The line inside the box.
+- First quartile (Q1): Lower edge of the box.
+- Third quartile (Q3): Upper edge of the box.
+- IQR: Difference between Q3 and Q1.
+- Whiskers: The range extending from the box according to the
+  box-plot convention.
+- Points beyond the whiskers: Potential outliers.
+
+dropna() removes missing AQI values before plotting.
+
+The box plot on page 3 shows several high AQI observations
+above the upper whisker. These are potential high-value outliers.
+
+K. SCATTER PLOT – PM2.5 VS AQI
+
+Code:
+    plt.scatter(
+        df["PM2.5"], df["AQI"], color="green"
+    )
+    plt.title("PM2.5 vs AQI")
+    plt.xlabel("PM2.5")
+    plt.ylabel("AQI")
+    plt.show()
+
+Explanation:
+A scatter plot displays the relationship between two numerical
+variables using individual points.
+
+- X-axis: PM2.5 concentration.
+- Y-axis: AQI.
+- Each dot represents one observation.
+
+The chart helps identify whether the two variables appear to
+move together.
+
+The graph on page 4 shows a general upward pattern: observations
+with higher PM2.5 often have higher AQI. This suggests a positive
+association in the selected data. It does not prove causation,
+and AQI can also depend on other pollutants.
+
+L. DISPLAY COMPLETION MESSAGE
+
+Code:
+    print("AQI Visualization Completed Successfully!")
+
+Explanation:
+This prints a message indicating that the visualization
+commands have completed. It does not perform additional
+statistical analysis.
+
+============================================================
+4. EXPLANATION TO PRESENT TO THE INVIGILATOR
+============================================================
+
+"Good morning, sir/madam.
+
+The aim of this practical is to analyze Air Quality Index trends
+in a city. For this practical, I have selected Mumbai from the
+India city-wise air-quality dataset.
+
+First, I load the dataset from GitHub using Pandas and explore
+its structure. The original dataset contains 29,531 records and
+16 columns, including pollutant measurements and AQI.
+
+Next, I filter the dataset to keep only records where City is
+Mumbai. I remove rows that have missing values in AQI, PM2.5,
+PM10 or CO.
+
+Then I convert the Date column into datetime format, sort the
+records chronologically and extract the year into a new Year
+column.
+
+After preparing the data, I create different visualizations.
+First, a line chart shows the AQI trend over time. A second line
+chart compares PM2.5 and PM10 levels over time.
+
+I then use groupby() and mean() to calculate the average AQI
+for each year and display it using a bar chart.
+
+Finally, I use a box plot to understand the distribution and
+potential outliers in AQI, and a scatter plot to examine the
+relationship between PM2.5 and AQI.
+
+Thus, this practical demonstrates city-wise data filtering,
+missing-value handling, date processing, yearly aggregation
+and visualization of air-quality trends."
+
+============================================================
+5. TEN MOST EXPECTED VIVA QUESTIONS WITH DETAILED ANSWERS
+============================================================
+
+Q1. What is AQI? Why is it important?
+
+Answer:
+AQI stands for Air Quality Index. It is an index used to
+communicate the quality of air and the potential health effects
+associated with air pollution.
+
+It converts information about air pollutants into a value or
+category that is easier for the public to understand.
+
+Higher AQI values generally indicate poorer air quality and
+greater potential health concern.
+
+In this practical, AQI is analyzed over time for Mumbai to
+understand how air quality changes across the selected period.
+
+Q2. What is the difference between PM2.5 and PM10?
+
+Answer:
+PM stands for particulate matter, which refers to tiny solid
+particles or liquid droplets suspended in the air.
+
+PM2.5 refers to particles with a diameter of 2.5 micrometres
+or smaller. These fine particles can penetrate deep into the
+respiratory system.
+
+PM10 refers to particles with a diameter of 10 micrometres
+or smaller. It includes particles in the PM2.5 size range as
+well as larger inhalable particles.
+
+In this practical, both are plotted over time to compare their
+pollution-level patterns in Mumbai.
+
+Q3. What is the purpose of filtering the dataset for Mumbai?
+
+Answer:
+The original dataset contains air-quality observations from
+multiple Indian cities.
+
+The practical focuses on analyzing one city, Mumbai. The
+condition:
+    df[df["City"] == "Mumbai"]
+
+selects only the rows where the City column contains Mumbai.
+
+This makes the analysis city-specific and prevents records
+from other cities from affecting Mumbai's AQI trends.
+
+Q4. Why do we use dropna() in this practical?
+
+Answer:
+dropna() removes rows or columns containing missing values.
+
+Here, the subset argument specifies AQI, PM2.5, PM10 and CO.
+Therefore, a row is removed if any of these selected fields
+is missing.
+
+These columns are required for the analysis and visualizations
+performed in the notebook.
+
+This notebook uses deletion of incomplete rows rather than
+filling missing values through mean or median imputation.
+
+Q5. Why is the Date column converted to datetime? What does
+.dt.year do?
+
+Answer:
+The Date column is initially stored as text/object data.
+Converting it using pd.to_datetime() makes it a proper datetime
+column.
+
+Datetime format supports date-based operations such as sorting,
+extracting years and grouping by time periods.
+
+.dt.year extracts the year component from each date. The
+notebook stores this value in a new Year column to calculate
+average AQI by year.
+
+Q6. Why is sort_values("Date") used before creating a line chart?
+
+Answer:
+A line chart connects data points in the order in which they
+are supplied.
+
+If the records are not sorted by date, the line may connect
+observations in an incorrect time sequence and produce a
+misleading trend.
+
+sort_values("Date") arranges the observations chronologically,
+so the line chart represents the AQI changes in the correct
+date order.
+
+Q7. What is groupby()? Explain how average AQI by year is
+calculated.
+
+Answer:
+groupby() divides records into groups based on the values of
+a selected column.
+
+In this practical:
+    df.groupby("Year")["AQI"].mean()
+
+first groups all records by Year, selects the AQI column and
+calculates the mean AQI for each year.
+
+This produces one average AQI value per year, which is then
+displayed using a bar chart.
+
+Q8. What is a box plot? What information does it provide?
+
+Answer:
+A box plot is a statistical chart used to summarize the
+distribution of numerical data.
+
+It displays the median, first quartile, third quartile,
+interquartile range and whiskers. Individual points beyond
+the whiskers may represent potential outliers.
+
+In this practical, the box plot summarizes the distribution
+of Mumbai's AQI values and shows several unusually high AQI
+observations.
+
+Q9. What is a scatter plot? What does the PM2.5 versus AQI
+plot indicate?
+
+Answer:
+A scatter plot displays the relationship between two numerical
+variables. Each point represents one observation, with one
+variable on the x-axis and the other on the y-axis.
+
+In this practical:
+- X-axis represents PM2.5.
+- Y-axis represents AQI.
+
+The displayed points generally follow an upward pattern,
+suggesting that higher PM2.5 values are often associated with
+higher AQI values.
+
+This indicates association, not proof of causation. AQI also
+depends on other pollutants and the applicable AQI calculation
+method.
+
+Q10. What is the difference between a line chart, bar chart,
+box plot and scatter plot?
+
+Answer:
+- Line chart: Shows changes or trends over an ordered sequence,
+  such as AQI over dates.
+- Bar chart: Compares values across categories, such as average
+  AQI for different years.
+- Box plot: Summarizes the distribution of numerical values,
+  including median, quartiles and potential outliers.
+- Scatter plot: Shows the relationship or association between
+  two numerical variables, such as PM2.5 and AQI.
+
+In this practical, all four chart types are used for different
+purposes in the same air-quality analysis.
+
+============================================================
+6. ADDITIONAL QUICK-FIRE VIVA QUESTIONS
+============================================================
+
+1. What does AQI stand for?
+   Air Quality Index.
+
+2. What does df[df["City"] == "Mumbai"] do?
+   Selects rows where the City value is Mumbai.
+
+3. Why is .copy() used after filtering?
+   It creates a separate copy of the selected data.
+
+4. What does dropna(subset=[...]) do?
+   Removes rows with missing values in any of the specified
+   columns.
+
+5. What does pd.to_datetime() do?
+   Converts date-like values into Pandas datetime format.
+
+6. What does sort_values("Date") do?
+   Sorts records according to the Date column.
+
+7. What does .dt.year do?
+   Extracts the year from datetime values.
+
+8. What does plt.plot() create?
+   A line chart by default.
+
+9. What does plt.legend() do?
+   Displays labels identifying the plotted lines or data series.
+
+10. What does groupby("Year") do?
+    Groups records according to their Year value.
+
+11. What does mean() do?
+    Calculates the arithmetic average.
+
+12. What does plt.bar() create?
+    A bar chart.
+
+13. What does plt.boxplot() create?
+    A box-and-whisker plot.
+
+14. What does dropna() inside the box plot do?
+    Removes missing AQI values before plotting.
+
+15. What does plt.scatter() create?
+    A scatter plot of two numerical variables.
+
+16. What is an outlier?
+    An observation that is unusually far from the majority
+    of values.
+
+17. What is the median?
+    The middle value after sorting the observations.
+
+18. What is IQR?
+    Interquartile Range, calculated as Q3 minus Q1.
+
+19. What is a pollutant?
+    A substance in the environment that can cause pollution.
+
+20. Name pollutants included in this dataset.
+    PM2.5, PM10, NO, NO2, NOx, NH3, CO, SO2, O3, Benzene,
+    Toluene and Xylene.
+
+21. What does PM stand for?
+    Particulate Matter.
+
+22. What does a positive relationship in a scatter plot mean?
+    The two variables tend to increase together.
+
+23. Does correlation prove causation?
+    No. Association alone does not establish cause and effect.
+
+24. What is the difference between AQI and PM2.5?
+    PM2.5 is one pollutant measurement, while AQI is an index
+    that communicates overall air-quality conditions using
+    pollutant information.
+
+25. Does this notebook predict future AQI?
+    No. It analyzes historical observations and visualizes
+    patterns; it does not train a forecasting model.
+
+============================================================
+7. IMPORTANT OUTPUTS AND CHARTS TO REMEMBER
+============================================================
+
+Original dataset:
+- Rows: 29,531.
+- Columns: 16.
+- Numerical columns: 13.
+- Object columns: 3.
+
+Selected city:
+- Mumbai.
+
+Selected missing-value columns:
+- AQI.
+- PM2.5.
+- PM10.
+- CO.
+
+Date processing:
+- Date converted to datetime.
+- Records sorted by date.
+- Year extracted into a new column.
+
+Visualizations:
+1. AQI Trend in Mumbai – line chart.
+2. Pollutant Levels in Mumbai – two-line chart for PM2.5
+   and PM10.
+3. Average AQI by Year – bar chart.
+4. AQI Distribution – box plot.
+5. PM2.5 vs AQI – scatter plot.
+
+Years shown in the yearly bar chart:
+- 2018.
+- 2019.
+- 2020.
+
+Chart observations:
+- AQI changes substantially over time, with visible peaks.
+- PM10 is generally higher than PM2.5 in the displayed
+  pollutant trend chart.
+- The 2019 average AQI bar is slightly higher than the
+  2018 and 2020 bars.
+- The AQI box plot shows several high-value potential outliers.
+- The PM2.5-versus-AQI scatter plot shows a general upward
+  association.
+
+============================================================
+8. LAST-MINUTE REVISION
+============================================================
+
+Remember the practical flow:
+
+LOAD DATASET
+    pd.read_csv()
+        |
+        v
+EXPLORE DATA
+    head() + info()
+        |
+        v
+FILTER CITY
+    City == "Mumbai"
+        |
+        v
+HANDLE MISSING VALUES
+    dropna(subset=[...])
+        |
+        v
+CONVERT AND SORT DATES
+    to_datetime() + sort_values()
+        |
+        v
+EXTRACT YEAR
+    Date.dt.year
+        |
+        v
+VISUALIZE AQI TREND
+    Line chart: Date vs AQI
+        |
+        v
+VISUALIZE POLLUTANTS
+    Line chart: PM2.5 and PM10
+        |
+        v
+YEARLY AGGREGATION
+    groupby("Year")["AQI"].mean()
+        |
+        v
+VISUALIZE DISTRIBUTION
+    Box plot
+        |
+        v
+COMPARE TWO VARIABLES
+    Scatter plot: PM2.5 vs AQI
+
+MOST IMPORTANT CONCEPTS:
+1. Air Quality Index (AQI).
+2. PM2.5 and PM10.
+3. City-wise filtering.
+4. Missing-value removal using dropna().
+5. Datetime conversion and chronological sorting.
+6. Extracting year using .dt.year.
+7. groupby() and mean().
+8. Line chart and bar chart.
+9. Box plot, quartiles and outliers.
+10. Scatter plot and relationship between variables.
+11. Association versus causation.
+
+END OF DMV PRACTICAL 5

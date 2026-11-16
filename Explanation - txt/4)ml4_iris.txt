@@ -1,0 +1,575 @@
+# ML-4 : Kmeans clustering on  IRIS dataset
+
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+from sklearn.datasets import load_iris
+from sklearn.preprocessing import StandardScaler
+from sklearn.cluster import KMeans
+
+# Load dataset
+df = sns.load_dataset('iris')
+
+# Basic Data Exploration
+df.head()
+
+print("Dataset Shape:", df.shape)
+
+# Select features
+X = df.drop('species', axis=1)
+
+# Feature Scaling
+scaler = StandardScaler()
+X = scaler.fit_transform(X)
+
+# Elbow Method
+wcss = []
+
+for i in range(1, 11):
+    kmeans = KMeans(n_clusters=i, random_state=42, n_init=10)
+    kmeans.fit(X)
+    wcss.append(kmeans.inertia_)
+
+# Plot Elbow Graph
+plt.plot(range(1, 11), wcss, marker='o')
+plt.xlabel("Number of Clusters")
+plt.ylabel("WCSS")
+plt.title("ELBOW PLOT")
+plt.show()
+
+# Apply KMeans Clustering
+kmeans = KMeans(n_clusters=3, random_state=42, n_init=10)
+y_kmeans = kmeans.fit_predict(X)
+
+# Print Cluster Labels
+print("Cluster Labels:", y_kmeans)
+
+# Visualize Clusters
+plt.scatter(X[:, 0], X[:, 1], c=y_kmeans, cmap='viridis')
+
+plt.scatter(
+    kmeans.cluster_centers_[:, 0],
+    kmeans.cluster_centers_[:, 1],
+    color='red',
+    marker='x',
+    s=200,
+    label='Centroids'
+)
+
+plt.xlabel("Sepal Length (Scaled)")
+plt.ylabel("Sepal Width (Scaled)")
+plt.title("K-Means Clustering on Iris Dataset")
+plt.legend()
+plt.show()
+
+
+
+###############################################################################################################################
+###############################################################################################################################
+###############################################################################################################################
+
+
+
+
+PRACTICAL 4
+K-MEANS CLUSTERING ON THE IRIS DATASET
+Machine Learning Laboratory – 417525
+
+PROBLEM STATEMENT
+Apply the K-Means clustering algorithm to the Iris dataset, determine a
+suitable number of clusters using the Elbow Method, and visualize the
+resulting clusters.
+
+1. MAIN CONCEPTS
+
+1.1 What is Clustering?
+
+Clustering is an unsupervised machine learning technique used to group
+similar data points together.
+
+Unlike supervised learning, clustering does not require target labels
+during model training. The algorithm examines the input features and
+groups observations according to their similarity.
+
+For example, flowers with similar sepal and petal measurements may be
+placed in the same cluster.
+
+1.2 What is K-Means Clustering?
+
+K-Means is an unsupervised clustering algorithm that divides a dataset
+into K clusters.
+
+The algorithm works by:
+1. Selecting K initial cluster centroids.
+2. Assigning each data point to its nearest centroid.
+3. Recalculating each centroid as the mean of the points assigned to it.
+4. Repeating the assignment and centroid-update steps until the clusters
+stop changing significantly or the algorithm reaches its iteration
+limit.
+
+The objective is to minimize the Within-Cluster Sum of Squares (WCSS),
+also called inertia in Scikit-learn.
+
+1.3 Important Terms
+
+• Cluster: A group of data points that are similar to one another.
+• Centroid: The centre point of a cluster, calculated as the mean of the
+points assigned to that cluster.
+• K: The number of clusters that the algorithm must create.
+• WCSS: The sum of squared distances between each data point and the
+centroid of its assigned cluster.
+• Inertia: Scikit-learn's value for the within-cluster sum of squared
+distances. It is the value used as WCSS in this practical.
+
+1.4 What is the Elbow Method?
+
+The Elbow Method is used to help select a suitable value of K.
+
+The algorithm is run for different K values. For each value, WCSS is
+recorded and plotted against the number of clusters.
+
+As K increases, WCSS generally decreases because each point has a
+centroid that is closer to it. We select a value near the point where
+the decrease begins to slow noticeably. This point looks like an elbow
+in the graph.
+
+In this practical, the elbow plot shows a sharp decrease up to around
+K = 3, followed by a slower decrease. Therefore, K = 3 is selected.
+
+1.5 About the Iris Dataset
+
+The practical loads the Iris dataset using Seaborn.
+
+It contains:
+• 150 flower observations.
+• 4 numerical features:
+- sepal_length
+- sepal_width
+- petal_length
+- petal_width
+• 1 species column containing the flower species.
+
+The species column is not used when fitting K-Means. The algorithm
+clusters the flowers using the four numerical measurements only.
+
+2. IMPORTANT CODE CHUNKS AND EXPLANATIONS
+
+A. LOAD THE IRIS DATASET
+
+Code:
+    df = sns.load_dataset('iris')
+
+Explanation:
+This loads the Iris dataset from Seaborn into a Pandas DataFrame named df.
+
+The dataset contains 150 rows and 5 columns. Four columns contain
+numerical measurements of the flowers, while the species column contains
+the known species names.
+
+B. SELECT THE INPUT FEATURES
+
+Code:
+    X = df.drop('species', axis=1)
+
+Explanation:
+The species column is removed, and the remaining four numerical columns
+are stored in X.
+
+This is important because K-Means is an unsupervised algorithm. It should
+form clusters using the measurements, without being given the correct
+species labels during training.
+
+The four input features are:
+1. Sepal length
+2. Sepal width
+3. Petal length
+4. Petal width
+
+C. STANDARDIZE THE FEATURES
+
+Code:
+    scaler = StandardScaler()
+    X = scaler.fit_transform(X)
+
+Explanation:
+The four flower measurements have different numerical ranges. For
+example, petal width has a smaller range than sepal length.
+
+StandardScaler standardizes each feature using:
+
+    Z = (X - mean) / standard_deviation
+
+After scaling, each feature has approximately zero mean and unit
+standard deviation.
+
+Scaling is important for K-Means because it uses distances to assign
+points to clusters. Without scaling, features with larger numerical
+ranges could dominate the distance calculation.
+
+fit_transform() learns the scaling values from the dataset and applies
+the transformation.
+
+D. APPLY THE ELBOW METHOD
+
+Code:
+    wcss = []
+
+    for i in range(1, 11):
+        kmeans = KMeans(
+            n_clusters=i,
+            random_state=42,
+            n_init=10
+        )
+        kmeans.fit(X)
+        wcss.append(kmeans.inertia_)
+
+Explanation:
+This code tests different numbers of clusters, from K = 1 to K = 10.
+
+For each value of K:
+1. A K-Means model is created with that number of clusters.
+2. fit(X) groups the observations into clusters.
+3. inertia_ returns the WCSS value for that clustering.
+4. The WCSS value is stored in the wcss list.
+
+Important parameters:
+• n_clusters=i: Specifies the number of clusters being tested.
+• random_state=42: Makes the initialization reproducible.
+• n_init=10: Runs K-Means with 10 different centroid initializations
+and keeps the best result based on inertia.
+
+The purpose is to compare WCSS values for different K values and identify
+a suitable number of clusters.
+
+E. PLOT THE ELBOW GRAPH
+
+Code:
+    plt.plot(range(1, 11), wcss, marker='o')
+    plt.xlabel("Number of Clusters")
+    plt.ylabel("WCSS")
+    plt.title("ELBOW PLOT")
+    plt.show()
+
+Explanation:
+The graph plots:
+• X-axis: Number of clusters, from 1 to 10.
+• Y-axis: WCSS value for each number of clusters.
+
+The WCSS decreases as the number of clusters increases. We look for the
+point where the curve changes from a steep decrease to a more gradual
+decrease.
+
+In the notebook's Elbow Plot on page 2, the curve drops sharply from
+K = 1 to K = 3 and then starts flattening. Therefore, the practical
+selects K = 3.
+
+F. APPLY K-MEANS CLUSTERING WITH K = 3
+
+Code:
+    kmeans = KMeans(
+        n_clusters=3,
+        random_state=42,
+        n_init=10
+    )
+
+    y_kmeans = kmeans.fit_predict(X)
+
+Explanation:
+After selecting K = 3 from the Elbow Method, a final K-Means model is
+created with three clusters.
+
+fit_predict() performs two operations:
+1. Fits the K-Means model to the input data.
+2. Returns the cluster label assigned to each observation.
+
+The result is stored in y_kmeans. Each observation receives a cluster
+number such as 0, 1 or 2.
+
+These numbers are only cluster identifiers. They do not automatically
+correspond to the actual Iris species names.
+
+G. VISUALIZE THE CLUSTERS AND CENTROIDS
+
+Code:
+    plt.scatter(
+        X[:, 0],
+        X[:, 1],
+        c=y_kmeans,
+        cmap='viridis'
+    )
+
+    plt.scatter(
+        kmeans.cluster_centers_[:, 0],
+        kmeans.cluster_centers_[:, 1],
+        color='red',
+        marker='x',
+        s=200,
+        label='Centroids'
+    )
+
+    plt.xlabel("Sepal Length (Scaled)")
+    plt.ylabel("Sepal Width (Scaled)")
+    plt.title("K-Means Clustering on Iris Dataset")
+    plt.legend()
+    plt.show()
+
+Explanation:
+The first scatter plot displays the observations using their assigned
+cluster labels as colors.
+
+• X[:, 0] selects the first feature, scaled sepal length.
+• X[:, 1] selects the second feature, scaled sepal width.
+• c=y_kmeans assigns a color according to the cluster label.
+• cmap='viridis' selects the color map.
+
+The second scatter plot displays the cluster centroids:
+• kmeans.cluster_centers_ contains the final centroid coordinates.
+• [:, 0] selects the first feature coordinate.
+• [:, 1] selects the second feature coordinate.
+• Red 'x' markers represent the centroids.
+
+IMPORTANT VISUALIZATION DETAIL:
+K-Means was trained using all four scaled features. However, the graph
+shows only the first two features, sepal length and sepal width. It is
+therefore a two-dimensional view of clusters formed in four-dimensional
+feature space. The plotted centroid markers also show only the first two
+coordinates of each four-dimensional centroid.
+
+3. EXPLANATION TO PRESENT TO THE INVIGILATOR
+
+Good morning, sir/madam.
+
+The aim of this practical is to perform K-Means clustering on the Iris
+dataset and identify a suitable number of clusters using the Elbow Method.
+
+K-Means is an unsupervised machine learning algorithm that groups similar
+data points into K clusters based on their distance from cluster centroids.
+
+First, I loaded the Iris dataset using Seaborn. It contains 150 flower
+observations, four numerical features and one species column.
+
+Next, I removed the species column and selected the four numerical
+features for clustering. I standardized these features using
+StandardScaler because K-Means uses distance calculations and the
+features have different numerical ranges.
+
+Then, I applied the Elbow Method. I tested K values from 1 to 10, recorded
+the WCSS for each value and plotted the Elbow Graph. The graph shows a
+clear bend around K = 3, so I selected three clusters.
+
+After that, I created the final K-Means model with n_clusters equal to 3
+and used fit_predict() to assign each flower observation to a cluster.
+
+Finally, I visualized the clusters using a scatter plot and displayed
+the centroids using red cross markers.
+
+Thus, I performed K-Means clustering on the Iris dataset and selected
+three clusters using the Elbow Method.
+
+4. TEN MOST EXPECTED VIVA QUESTIONS WITH DETAILED ANSWERS
+
+Q1. What is clustering? Is it supervised or unsupervised learning?
+
+Answer:
+Clustering is a machine learning technique used to group similar data
+points together based on their features.
+
+It is an unsupervised learning technique because the algorithm does not
+need the correct class labels during training. It discovers groups or
+patterns from the input data itself.
+
+In this practical, K-Means groups Iris flowers using their four
+measurements. The species column is removed before clustering.
+
+Q2. What is K-Means clustering? Explain how it works.
+
+Answer:
+K-Means is an unsupervised clustering algorithm that divides a dataset
+into K groups.
+
+First, it initializes K centroids. Each data point is assigned to the
+nearest centroid. Then, the centroid of each cluster is recalculated as
+the mean of all points assigned to that cluster.
+
+The assignment and centroid-update steps are repeated until the clusters
+stop changing significantly or the algorithm reaches its iteration
+limit.
+
+The objective is to minimize the sum of squared distances between data
+points and their assigned centroids.
+
+Q3. What is a centroid in K-Means?
+
+Answer:
+A centroid is the centre of a cluster. It is calculated by taking the
+mean of the feature values of all data points assigned to that cluster.
+
+Every cluster has one centroid. During K-Means training, points are
+assigned to the nearest centroid, and the centroid is updated based on
+the newly assigned points.
+
+In the practical's final graph, the centroids are represented by red
+cross markers.
+
+Q4. What is WCSS? Why does it decrease when K increases?
+
+Answer:
+WCSS stands for Within-Cluster Sum of Squares. It is the sum of the
+squared distances between every data point and the centroid of its
+assigned cluster.
+
+A lower WCSS means that points are, on average, closer to their assigned
+centroids.
+
+When K increases, more centroids are available, so points can generally
+be assigned to closer centroids. Therefore, WCSS usually decreases as K
+increases.
+
+However, choosing a very large K is not always useful. The Elbow Method
+helps identify a reasonable balance between a low WCSS and a manageable
+number of clusters.
+
+Q5. What is the Elbow Method? Why did you choose K = 3?
+
+Answer:
+The Elbow Method is a technique used to estimate a suitable number of
+clusters for K-Means.
+
+We run K-Means for different values of K, calculate WCSS for each value
+and plot WCSS against K.
+
+We look for the point where the curve changes from a steep decrease to
+a slower decrease. This point resembles an elbow.
+
+In this practical, the graph shows a sharp reduction in WCSS up to around
+K = 3, after which the curve becomes flatter. Therefore, K = 3 is
+selected as a suitable number of clusters.
+
+Q6. Why is StandardScaler used before K-Means?
+
+Answer:
+K-Means uses distance calculations to assign observations to their
+nearest centroids. If features have different numerical ranges, features
+with larger ranges can dominate the distance calculation.
+
+StandardScaler transforms each feature to approximately zero mean and
+unit standard deviation:
+
+    Z = (X - mean) / standard_deviation
+
+This gives the features comparable scales so that one feature does not
+dominate only because of its numerical range.
+
+Q7. What is the difference between K-Means and KNN?
+
+Answer:
+K-Means and KNN are different algorithms even though their names are
+similar.
+
+K-Means is an unsupervised clustering algorithm. It groups data points
+into K clusters without requiring class labels.
+
+KNN stands for K-Nearest Neighbors. It is commonly used as a supervised
+classification algorithm. It predicts the class of a new observation
+based on the labels of its nearest training observations. It can also
+be used for regression.
+
+In short, K-Means forms clusters, while KNN predicts using nearby
+labelled observations.
+
+Q8. What is the role of random_state and n_init in this practical?
+
+Answer:
+K-Means can produce different results depending on the initial centroid
+positions.
+
+random_state=42 fixes the random seed so that the initialization can be
+reproduced when the same code and data are used.
+
+n_init=10 tells Scikit-learn to run K-Means ten times using different
+centroid initializations. It keeps the run with the lowest inertia
+among those runs.
+
+These settings help make the result more stable and reproducible.
+
+Q9. Why is the species column removed? Does K-Means know the actual
+Iris species?
+
+Answer:
+The species column is removed because K-Means is an unsupervised
+algorithm. It forms clusters using the numerical flower measurements
+without using the correct species labels.
+
+The species labels are not provided to the K-Means model during fitting.
+Therefore, cluster labels such as 0, 1 and 2 are algorithm-generated
+identifiers and do not automatically mean setosa, versicolor or virginica.
+
+The clusters could be compared with the known species labels afterward
+for evaluation, but that comparison is not performed in this notebook.
+
+Q10. Why does the graph show only two features when K-Means uses four?
+What are the limitations of this visualization?
+
+Answer:
+The model is trained using all four standardized Iris features:
+sepal length, sepal width, petal length and petal width.
+
+For visualization, the code selects only X[:, 0] and X[:, 1], which are
+the first two features: scaled sepal length and scaled sepal width.
+
+This makes it possible to display the observations on a two-dimensional
+scatter plot. The centroids are also displayed using their first two
+coordinates.
+
+The limitation is that the graph does not show the petal length and
+petal width dimensions. Therefore, some separation that exists in the
+full four-dimensional feature space may not be visible in this
+two-dimensional plot.
+
+5. IMPORTANT FORMULAS AND QUICK REVISION
+
+Standardization:
+    Z = (X - mean) / standard_deviation
+
+Within-Cluster Sum of Squares:
+    WCSS = Sum of squared distances from each point
+           to the centroid of its assigned cluster.
+
+Centroid of a cluster:
+    Centroid = Mean of all points assigned to that cluster.
+
+PRACTICAL FACTS
+• Practical: K-Means Clustering on Iris Dataset
+• Algorithm: K-Means
+• Learning type: Unsupervised learning
+• Problem type: Clustering
+• Dataset: Iris dataset loaded using Seaborn
+• Total observations: 150
+• Numerical input features: 4
+• Species column: Removed before clustering
+• Scaling method: StandardScaler
+• Method for selecting K: Elbow Method
+• K values tested: 1 to 10
+• Selected number of clusters: 3
+• K-Means parameters: random_state=42, n_init=10
+• Cluster labels: 0, 1 and 2
+• Visualization: Scaled sepal length against scaled sepal width
+• Centroids: Shown using red cross markers
+
+IMPORTANT POINTS TO REMEMBER
+1. K-Means is an unsupervised clustering algorithm.
+2. K represents the number of clusters.
+3. A centroid is the mean position of the points in a cluster.
+4. WCSS measures the sum of squared distances from points to their
+assigned centroids.
+5. The Elbow Method helps select a suitable K.
+6. The practical selects K = 3 based on the elbow plot.
+7. StandardScaler is used because K-Means depends on distances.
+8. The species column is not used to train K-Means.
+9. Cluster labels 0, 1 and 2 are identifiers, not actual species names.
+10. The model uses all four features, but the final graph displays only
+    the first two scaled features.
+
+END OF PRACTICAL 4

@@ -1,0 +1,752 @@
+# ML-2: Predict  the price of uber ride
+
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LinearRegression, Ridge, Lasso
+from sklearn.preprocessing import StandardScaler
+from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
+
+# Download dataset
+import kagglehub
+path = kagglehub.dataset_download("yasserh/uber-fares-dataset")
+
+# Load CSV
+import os
+csv_path = os.path.join(path, "uber.csv")
+df = pd.read_csv(csv_path)
+
+print(df.columns)
+print("NULL VALUES:\n", df.isnull().sum())
+
+# Handle Missing Values
+
+df['dropoff_latitude'] = df['dropoff_latitude'].fillna(
+    df['dropoff_latitude'].mean()
+)
+
+df['dropoff_longitude'] = df['dropoff_longitude'].fillna(
+    df['dropoff_longitude'].mean()
+)
+
+print("Missing values after treatment:\n", df.isnull().sum())
+
+# Convert Datetime Column
+
+df['pickup_datetime'] = pd.to_datetime(
+    df['pickup_datetime']
+)
+
+print("Datatype after transformation:\n", df.dtypes)
+
+# Remove Unnecessary Columns
+
+df = df.drop(
+    ['key', 'pickup_datetime', 'Unnamed: 0'],
+    axis = 1
+)
+
+df.columns
+
+# Handling Outliers
+
+plt.figure(figsize=(10, 5))
+sns.boxplot(x=df['fare_amount'])
+plt.show()
+
+print("Shape Before:", df.shape)
+
+# Remove outliers using the IQR method
+
+df = df[df['fare_amount'] > 0]
+
+q1 = df['fare_amount'].quantile(0.25)
+q3 = df['fare_amount'].quantile(0.75)
+
+iqr = q3 - q1
+
+lower_bound = q1 - 1.5 * iqr
+upper_bound = q3 + 1.5 * iqr
+
+df = df[
+    (df['fare_amount'] >= lower_bound) &
+    (df['fare_amount'] <= upper_bound)
+]
+
+print("Shape After:", df.shape)
+
+# Correlation
+
+corr = df.corr(numeric_only=True)
+sns.heatmap(corr, annot=True, cmap='coolwarm', fmt='.2f')
+plt.title("Correlation Matrix")
+plt.show()
+
+# Model Training
+
+X = df.drop(['fare_amount'], axis=1)
+y = df['fare_amount']
+
+print(X.dtypes)
+
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size = 0.2, random_state = 42
+)
+
+scaler = StandardScaler()
+X_train = scaler.fit_transform(X_train)
+X_test = scaler.transform(X_test)
+
+# Applying simple regression , lasso and Ridge model and Evaluate models
+models = [LinearRegression(), Ridge(alpha=1.0), Lasso(alpha=0.1)]
+names = ['Linear Regression', 'Ridge Regression', 'Lasso Regresssion']
+
+# Model Evaluation
+for name, model in zip(names, models):
+    model.fit(X_train, y_train)
+    y_pred = model.predict(X_test)
+
+    r2 = r2_score(y_test, y_pred)
+    rmse = np.sqrt(mean_squared_error(y_test, y_pred))
+    mae = mean_absolute_error(y_test, y_pred)
+    mse = mean_squared_error(y_test, y_pred)
+
+    print(name)
+    print(f"R2 Score: {r2:.6f}")
+    print(f"RMSE: {rmse:.6f}")
+    print(f"MAE: {mae:.6f}")
+    print(f"MSE: {mse:.6f}\n")
+
+
+
+###############################################################################################################################
+###############################################################################################################################
+###############################################################################################################################
+
+
+
+PRACTICAL 2
+UBER FARE PREDICTION USING REGRESSION
+Machine Learning Laboratory – 417525
+
+PROBLEM STATEMENT
+Predict the price of an Uber ride using the available ride details by applying
+Linear Regression, Ridge Regression and Lasso Regression.
+
+1. MAIN CONCEPTS
+
+1.1 What is Regression?
+
+Regression is a supervised machine learning technique used to predict a
+continuous numerical value.
+
+Examples include predicting house prices, salaries, temperatures and taxi
+fares.
+
+In this practical, the target variable is fare_amount. The model uses the
+pickup and drop-off coordinates and passenger_count to predict the ride fare.
+
+1.2 Algorithms used
+
+1. Linear Regression
+It finds a linear relationship between input features and a numerical
+target. It chooses coefficients that minimize prediction error.
+
+2. Ridge Regression
+It is Linear Regression with L2 regularization. It adds a penalty based on
+the squared values of the model coefficients. This discourages very large
+coefficients and can help control overfitting.
+
+3. Lasso Regression
+It is Linear Regression with L1 regularization. It adds a penalty based on
+the absolute values of the coefficients. It can shrink some coefficients
+exactly to zero, which can act as feature selection.
+
+The alpha parameter controls the strength of regularization in Ridge and
+Lasso. A larger alpha applies a stronger penalty.
+
+1.3 Important supporting concepts
+
+• Missing values: Entries that are absent from the dataset.
+• Outliers: Values that are unusually far from most observations.
+• IQR: Interquartile Range, calculated as Q3 minus Q1. It is used here to
+identify unusually low or high fare values.
+• Feature scaling: Transforming input features to comparable numerical
+scales.
+• Training data: Data used to teach the model.
+• Testing data: Separate data used to evaluate the trained model.
+• Overfitting: When a model learns the training data too closely and performs
+poorly on unseen data.
+
+2. IMPORTANT CODE CHUNKS AND EXPLANATIONS
+
+A. DOWNLOAD AND LOAD THE DATASET
+
+Code:
+    import kagglehub
+    path = kagglehub.dataset_download("yasserh/uber-fares-dataset")
+
+    import os
+    csv_path = os.path.join(path, "uber.csv")
+    df = pd.read_csv(csv_path)
+
+Explanation:
+The dataset is downloaded from Kaggle using kagglehub. The returned path
+points to the downloaded dataset folder. os.path.join() creates the path to
+uber.csv, and Pandas reads the CSV file into the DataFrame df.
+
+The dataset initially contains 200,000 rows and these columns:
+• Unnamed: 0
+• key
+• fare_amount
+• pickup_datetime
+• pickup_longitude
+• pickup_latitude
+• dropoff_longitude
+• dropoff_latitude
+• passenger_count
+
+The target to predict is fare_amount.
+
+B. CHECK AND HANDLE MISSING VALUES
+
+Code:
+    print(df.isnull().sum())
+
+    df['dropoff_latitude'] = df['dropoff_latitude'].fillna(
+        df['dropoff_latitude'].mean()
+    )
+
+    df['dropoff_longitude'] = df['dropoff_longitude'].fillna(
+        df['dropoff_longitude'].mean()
+    )
+
+Explanation:
+The missing-value check shows one missing value in dropoff_latitude and one
+in dropoff_longitude. The code replaces each missing value with the mean of
+its respective column.
+
+Mean imputation is a simple way to fill missing numerical values. After this
+step, the notebook output shows zero missing values in every column.
+
+C. CONVERT DATETIME AND REMOVE UNNECESSARY COLUMNS
+
+Code:
+    df['pickup_datetime'] = pd.to_datetime(
+        df['pickup_datetime']
+    )
+
+    df = df.drop(
+        ['key', 'pickup_datetime', 'Unnamed: 0'],
+        axis=1
+    )
+
+Explanation:
+pd.to_datetime() converts pickup_datetime from text/object format into a
+datetime data type.
+
+The code then removes key, pickup_datetime and Unnamed: 0:
+• key is an identifier rather than a useful numerical ride feature.
+• Unnamed: 0 is an index-like column.
+• pickup_datetime is converted to datetime but then removed from the model
+dataset.
+
+After removal, the remaining columns are fare_amount, pickup_longitude,
+pickup_latitude, dropoff_longitude, dropoff_latitude and passenger_count.
+
+IMPORTANT OBSERVATION:
+Although pickup_datetime is converted, the code drops it without extracting
+useful information such as pickup hour, day or month. Therefore, time-based
+information is not used by these models.
+
+D. VISUALIZE AND REMOVE FARE OUTLIERS USING IQR
+
+Code:
+    plt.figure(figsize=(10, 5))
+    sns.boxplot(x=df['fare_amount'])
+    plt.show()
+
+    df = df[df['fare_amount'] > 0]
+
+    q1 = df['fare_amount'].quantile(0.25)
+    q3 = df['fare_amount'].quantile(0.75)
+
+    iqr = q3 - q1
+
+    lower_bound = q1 - 1.5 * iqr
+    upper_bound = q3 + 1.5 * iqr
+
+    df = df[
+        (df['fare_amount'] >= lower_bound) &
+        (df['fare_amount'] <= upper_bound)
+    ]
+
+Explanation:
+First, a boxplot is created to visualize the distribution of fare_amount
+and identify possible outliers.
+
+The code removes fares that are zero or negative. It then calculates the
+first quartile (Q1), third quartile (Q3) and interquartile range (IQR).
+
+    IQR = Q3 - Q1
+    Lower Bound = Q1 - 1.5 × IQR
+    Upper Bound = Q3 + 1.5 × IQR
+
+Values outside these bounds are removed from the dataset.
+
+In this notebook:
+• Shape before filtering: (200000, 6)
+• Shape after filtering:  (182822, 6)
+
+This means 17,178 rows were removed during the fare filtering process.
+
+E. CORRELATION HEATMAP
+
+Code:
+    corr = df.corr(numeric_only=True)
+
+    sns.heatmap(
+        corr,
+        annot=True,
+        cmap='coolwarm',
+        fmt='.2f'
+    )
+
+    plt.title("Correlation Matrix")
+    plt.show()
+
+Explanation:
+Correlation measures the strength and direction of a linear relationship
+between two numerical variables. Its value ranges from -1 to +1.
+
+• +1: Perfect positive linear correlation.
+• -1: Perfect negative linear correlation.
+• 0: No linear correlation.
+
+The heatmap displays the correlation values using colors. annot=True prints
+the values inside the cells, and fmt='.2f' displays them to two decimal
+places.
+
+The notebook's heatmap shows strong relationships between some coordinate
+features. However, fare_amount has a correlation close to zero with each
+individual input feature in this processed dataset. This helps explain why
+the fitted models later perform poorly, although correlation alone does not
+fully determine predictive performance.
+
+F. SEPARATE FEATURES AND TARGET
+
+Code:
+    X = df.drop(['fare_amount'], axis=1)
+    y = df['fare_amount']
+
+Explanation:
+X contains the input features used to predict the fare:
+• pickup_longitude
+• pickup_latitude
+• dropoff_longitude
+• dropoff_latitude
+• passenger_count
+
+y contains fare_amount, the numerical value that the model must predict.
+
+This is a supervised learning problem because the training data contains
+both input features and the known target values.
+
+G. SPLIT INTO TRAINING AND TESTING DATA
+
+Code:
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=0.2, random_state=42
+    )
+
+Explanation:
+The dataset is divided into two parts:
+• 80% training data: used to train the models.
+• 20% testing data: used to evaluate the models on data not used for
+training.
+
+test_size=0.2 reserves 20% for testing. random_state=42 makes the split
+reproducible, so the same split is produced when the code is run again with
+the same data and settings.
+
+H. STANDARDIZE THE INPUT FEATURES
+
+Code:
+    scaler = StandardScaler()
+    X_train = scaler.fit_transform(X_train)
+    X_test = scaler.transform(X_test)
+
+Explanation:
+The input features have different numerical ranges. StandardScaler converts
+each feature to approximately zero mean and unit standard deviation.
+
+The formula is:
+
+    Z = (X - mean) / standard_deviation
+
+The scaler is fitted only on X_train. It learns the training-set mean and
+standard deviation. The same learned scaling values are then applied to
+X_train and X_test.
+
+This is important because fitting the scaler separately on the test set
+would allow information from the test data to influence preprocessing.
+Using training statistics for both sets helps prevent data leakage.
+
+I. CREATE THE THREE REGRESSION MODELS
+
+Code:
+    models = [
+        LinearRegression(),
+        Ridge(alpha=1.0),
+        Lasso(alpha=0.1)
+    ]
+
+    names = [
+        'Linear Regression',
+        'Ridge Regression',
+        'Lasso Regresssion'
+    ]
+
+Explanation:
+Three models are created so their performance can be compared.
+
+1. LinearRegression(): Ordinary linear regression without a regularization
+penalty.
+2. Ridge(alpha=1.0): Linear regression with L2 regularization.
+3. Lasso(alpha=0.1): Linear regression with L1 regularization.
+
+The alpha values specify the regularization strength for Ridge and Lasso.
+The values used here are 1.0 for Ridge and 0.1 for Lasso.
+
+J. TRAIN AND EVALUATE THE MODELS
+
+Code:
+    for name, model in zip(names, models):
+        model.fit(X_train, y_train)
+        y_pred = model.predict(X_test)
+
+        r2 = r2_score(y_test, y_pred)
+        rmse = np.sqrt(mean_squared_error(y_test, y_pred))
+        mae = mean_absolute_error(y_test, y_pred)
+        mse = mean_squared_error(y_test, y_pred)
+
+Explanation:
+The loop processes each model one by one.
+
+• zip(names, models) pairs each model with its display name.
+• fit() trains the model using the training features and training fares.
+• predict() generates fare predictions for the test features.
+• The four metrics compare predicted fares with actual test fares.
+
+EVALUATION METRICS
+
+1. Mean Absolute Error (MAE)
+It is the average absolute difference between actual and predicted
+values. It is expressed in the same unit as the fare. Lower is better.
+
+       MAE = (1/n) × sum(|actual - predicted|)
+
+2. Mean Squared Error (MSE)
+It is the average of the squared prediction errors. Squaring gives
+greater weight to larger errors. Lower is better.
+
+       MSE = (1/n) × sum((actual - predicted)^2)
+
+3. Root Mean Squared Error (RMSE)
+It is the square root of MSE. It is expressed in the same unit as the
+target variable. Lower is better.
+
+       RMSE = sqrt(MSE)
+
+4. R-squared (R²)
+It measures how much of the variation in the target is explained by
+the model, relative to predicting the mean target value.
+
+• R² = 1: Perfect predictions.
+• R² = 0: No improvement over predicting the test-set mean.
+• R² < 0: Worse than predicting the test-set mean.
+
+For MAE, MSE and RMSE, lower values indicate smaller errors. For R², higher
+values are generally better.
+
+3. RESULTS AND THEIR INTERPRETATION
+
+The notebook reports these results:
+
+                         Linear       Ridge        Lasso
+    R²                   0.000067     0.000067    -0.000131
+    RMSE                 4.175142     4.175142     4.175554
+    MAE                  3.314721     3.314721     3.314905
+    MSE                 17.431807    17.431807    17.435255
+
+Interpretation:
+• Linear Regression and Ridge Regression produce almost identical results.
+• Lasso is marginally worse on these reported metrics.
+• The R² values are approximately zero, and Lasso's R² is slightly negative.
+• Therefore, all three models explain almost none of the variation in
+test-set fares and do not predict the fares well with the selected
+features and preprocessing.
+
+The result should be reported honestly. Do not describe these models as
+accurate simply because the code runs successfully.
+
+Possible reasons for weak performance:
+1. The model uses raw pickup and drop-off coordinates rather than a
+calculated trip distance.
+2. pickup_datetime is dropped, so time-related patterns are not included.
+3. fare_amount has almost zero individual linear correlation with the
+selected features in the displayed heatmap.
+4. The models are simple linear models and may not capture complex fare
+patterns.
+
+These are observations and possible explanations, not proof of a single
+cause.
+
+4. EXPLANATION TO PRESENT TO THE INVIGILATOR
+
+Good morning, sir/madam.
+
+The aim of this practical is to predict Uber ride fares using Linear
+Regression, Ridge Regression and Lasso Regression.
+
+First, I downloaded the Uber fares dataset from Kaggle and loaded it using
+Pandas. The dataset contains 200,000 records.
+
+I checked for missing values and found one missing value each in the
+drop-off latitude and longitude columns. I replaced these missing values
+using the mean of the respective columns.
+
+Next, I converted the pickup datetime column into datetime format and
+removed the unnecessary columns. I then visualized fare_amount using a
+boxplot and removed non-positive fares and outliers using the IQR method.
+
+After preprocessing, I used a correlation heatmap to examine relationships
+between the numerical features. Then I separated fare_amount as the target
+variable and the remaining columns as input features.
+
+I divided the data into 80% training data and 20% testing data. I
+standardized the input features using StandardScaler, fitting it on the
+training data and applying the same transformation to the testing data.
+
+Next, I trained Linear Regression, Ridge Regression and Lasso Regression
+models and compared them using R-squared, RMSE, MAE and MSE.
+
+The results show that Linear Regression and Ridge Regression performed
+almost identically, while Lasso was marginally worse. The R-squared values
+are close to zero, indicating that these models explain very little of the
+variation in the test fares.
+
+Thus, I implemented and compared three regression techniques for Uber fare
+prediction and evaluated their performance.
+
+5. TEN MOST EXPECTED VIVA QUESTIONS WITH DETAILED ANSWERS
+
+Q1. What is regression in machine learning? Why is this a regression
+problem?
+
+Answer:
+Regression is a supervised machine learning technique used to predict
+continuous numerical values from input features.
+
+This is a regression problem because the output, fare_amount, is a
+continuous numerical value. The model predicts a fare rather than assigning
+the ride to a category.
+
+Examples of other regression problems include predicting house prices,
+salary, temperature and sales.
+
+Q2. What is the difference between Linear Regression, Ridge Regression
+and Lasso Regression?
+
+Answer:
+Linear Regression fits a linear relationship between the input features
+and the target without adding a regularization penalty.
+
+Ridge Regression adds an L2 penalty, based on the sum of squared
+coefficients. It discourages large coefficient values and can help reduce
+overfitting.
+
+Lasso Regression adds an L1 penalty, based on the sum of absolute
+coefficients. It can shrink some coefficients exactly to zero, which can
+perform feature selection.
+
+In short:
+• Linear Regression: No regularization penalty.
+• Ridge: L2 regularization; shrinks coefficients.
+• Lasso: L1 regularization; can set coefficients to zero.
+
+Q3. What is regularization? What is the role of alpha?
+
+Answer:
+Regularization is a technique that adds a penalty to the model's loss
+function to discourage overly complex models or excessively large
+coefficients. It can help reduce overfitting.
+
+In Ridge and Lasso, alpha controls the strength of the penalty. A larger
+alpha applies stronger regularization. If alpha is too large, the model
+may become too simple and underfit the data. If it is too small, the
+regularization effect may be weak.
+
+Q4. What is the difference between L1 and L2 regularization?
+
+Answer:
+L1 regularization is used by Lasso. It adds a penalty proportional to the
+sum of the absolute coefficient values. It can make some coefficients
+exactly zero, so it can help select features.
+
+L2 regularization is used by Ridge. It adds a penalty proportional to the
+sum of squared coefficient values. It generally makes coefficients smaller
+but does not usually make them exactly zero.
+
+Q5. What are outliers? How did you handle them in this practical?
+
+Answer:
+Outliers are observations that are unusually far from the majority of
+values in a dataset. They can affect statistical analysis and model
+training, especially when methods are sensitive to extreme values.
+
+In this practical, I first used a boxplot to visualize the fare_amount
+distribution. Then I removed non-positive fares and applied the IQR method.
+
+IQR = Q3 - Q1
+Lower Bound = Q1 - 1.5 × IQR
+Upper Bound = Q3 + 1.5 × IQR
+
+Values outside the calculated bounds were removed. The dataset changed
+from 200,000 rows to 182,822 rows.
+
+Q6. What is the difference between MAE, MSE, RMSE and R²?
+
+Answer:
+These are metrics used to evaluate regression models.
+
+• MAE is the average absolute difference between actual and predicted
+values. It is easy to interpret and is in the target's unit.
+• MSE is the average squared prediction error. It penalizes larger errors
+more strongly because errors are squared.
+• RMSE is the square root of MSE. It is in the same unit as the target.
+• R² measures how much target variation the model explains compared with
+predicting the mean target value.
+
+Lower MAE, MSE and RMSE are better. Higher R² is generally better. A
+negative R² means the model performs worse than the mean-prediction
+baseline on that test set.
+
+Q7. Why do we split the dataset into training and testing data?
+
+Answer:
+The training data is used by the algorithm to learn the relationship
+between input features and the target.
+
+The testing data is kept separate and is used to check how well the trained
+model performs on unseen observations.
+
+In this practical, test_size=0.2 means 20% of the data is reserved for
+testing and the remaining 80% is used for training. This gives an estimate
+of how well the model generalizes to new data.
+
+Q8. Why is StandardScaler used? Why do we fit it only on training data?
+
+Answer:
+StandardScaler puts numerical features on comparable scales by
+subtracting the mean and dividing by the standard deviation.
+
+It is useful for Ridge and Lasso because regularization penalizes
+coefficients, and feature scales can affect the size and interpretation of
+those coefficients.
+
+The scaler is fitted only on the training data so that the mean and
+standard deviation are learned without using information from the test
+data. The same transformation is then applied to the test data. This
+prevents data leakage during preprocessing.
+
+Q9. What is correlation? What does a correlation value indicate?
+
+Answer:
+Correlation measures the strength and direction of a linear relationship
+between two numerical variables. Its value ranges from -1 to +1.
+
+• A value close to +1 indicates a strong positive linear relationship.
+• A value close to -1 indicates a strong negative linear relationship.
+• A value close to 0 indicates little or no linear relationship.
+
+The heatmap in this practical visualizes correlations among the numerical
+columns. Correlation does not prove causation, and a low linear correlation
+does not rule out every possible non-linear relationship.
+
+Q10. Why are the R² scores in this practical close to zero? How could
+the model be improved?
+
+Answer:
+The R² scores are close to zero, meaning the models explain almost none
+of the variation in the test-set fares compared with predicting the
+average fare.
+
+One possible reason is that the model uses raw pickup and drop-off
+coordinates instead of calculating the distance between the locations.
+The code also removes pickup_datetime without extracting useful time
+features such as hour, day or month. The heatmap also shows that fare_amount
+has almost zero individual linear correlation with the selected features.
+
+Possible improvements include:
+1. Calculate the distance between pickup and drop-off locations.
+2. Extract hour, day and month from pickup_datetime before dropping it.
+3. Check invalid or unrealistic latitude and longitude values.
+4. Try additional relevant features and compare models.
+5. Tune model parameters using cross-validation.
+6. Compare with suitable non-linear regression models.
+
+These are possible improvements; they are not implemented in the submitted
+notebook.
+
+6. IMPORTANT FORMULAS AND QUICK REVISION
+
+IQR:
+    IQR = Q3 - Q1
+
+Outlier boundaries:
+    Lower Bound = Q1 - 1.5 × IQR
+    Upper Bound = Q3 + 1.5 × IQR
+
+Standardization:
+    Z = (X - mean) / standard_deviation
+
+Mean Absolute Error:
+    MAE = (1/n) × sum(|actual - predicted|)
+
+Mean Squared Error:
+    MSE = (1/n) × sum((actual - predicted)^2)
+
+Root Mean Squared Error:
+    RMSE = sqrt(MSE)
+
+PRACTICAL FACTS
+• Practical: Uber Fare Prediction
+• Learning type: Supervised learning
+• Problem type: Regression
+• Dataset: Uber Fares dataset from Kaggle
+• Initial records: 200,000
+• Target variable: fare_amount
+• Input features after preprocessing: 5
+• Missing-value treatment: Mean imputation for drop-off coordinates
+• Outlier method: Boxplot and IQR
+• Records after fare filtering: 182,822
+• Train-test split: 80% training, 20% testing
+• Scaling: StandardScaler
+• Models: Linear Regression, Ridge Regression, Lasso Regression
+• Evaluation: R², RMSE, MAE and MSE
+
+IMPORTANT POINTS TO REMEMBER
+1. This is supervised regression because fare_amount is a continuous target.
+2. Ridge uses L2 regularization; Lasso uses L1 regularization.
+3. Alpha controls the strength of regularization.
+4. The IQR method is used to filter fare outliers.
+5. The scaler is fitted on training data and then used on test data.
+6. R² close to zero indicates very weak predictive performance here.
+7. The notebook converts pickup_datetime but then drops it, so time
+information is not used by the models.
+
+END OF PRACTICAL 2

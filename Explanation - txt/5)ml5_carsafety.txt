@@ -1,0 +1,723 @@
+# ML-5: Random Forest to Predict Safety of the Car
+
+import pandas as pd
+import matplotlib.pyplot as plt
+
+from sklearn.preprocessing import LabelEncoder
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
+
+# 1. Download Dataset
+import kagglehub
+path = kagglehub.dataset_download("elikplim/car-evaluation-data-set")
+
+# 2. Load Dataset (Without Headers)
+import os
+csv_path = os.path.join(path, "car_evaluation.csv")
+
+df = pd.read_csv(csv_path, header=None)
+
+df.columns = [
+    'buying', 'maint', 'doors','persons', 'lug_boot', 'safety', 'class'
+]
+
+# 3. Explore Dataset
+print("First 5 Rows:")
+print(df.head())
+
+print("Dataset Shape:", df.shape)
+
+print("Columns:", df.columns.tolist())
+
+# 4. Check Missing Values
+print("Missing Values:")
+print(df.isnull().sum())
+
+# 5. Encode Categorical Data
+encoder = LabelEncoder()
+
+for col in df.columns:
+    df[col] = encoder.fit_transform(df[col])
+
+print("Encoded Dataset:")
+print(df.head(10))
+
+# 6. Split Features and Target
+X = df.drop('class', axis=1)
+y = df['class']
+
+# 7. Train-Test Split
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y,
+    test_size=0.2,
+    random_state=42,
+    stratify=y
+)
+
+# 8. Create Random Forest Model
+model = RandomForestClassifier(
+    n_estimators=100,
+    random_state=42
+)
+
+# 9. Train Model
+model.fit(X_train, y_train)
+
+# 10. Predictions
+y_pred = model.predict(X_test)
+
+# 11. Model Evaluation
+print("Accuracy Score:", accuracy_score(y_test, y_pred))
+
+print("Classification Report:")
+print(classification_report(y_test, y_pred))
+
+print("Confusion Matrix:")
+print(confusion_matrix(y_test, y_pred))
+
+# 12. Feature Importance Graph
+plt.figure(figsize=(8, 5))
+
+plt.bar(X.columns, model.feature_importances_)
+
+plt.xlabel("Features")
+plt.ylabel("Importance")
+plt.title("Random Forest Feature Importances")
+
+plt.xticks(rotation=45)
+plt.tight_layout()
+plt.show()
+
+
+
+###############################################################################################################################
+###############################################################################################################################
+###############################################################################################################################
+
+
+
+
+PRACTICAL 5
+RANDOM FOREST TO PREDICT SAFETY OF THE CAR
+Machine Learning Laboratory – 417525
+
+PROBLEM STATEMENT
+Use the Random Forest Classification algorithm to predict the evaluation
+class of a car using its buying, maintenance, doors, persons, luggage boot
+and safety attributes.
+
+1. MAIN CONCEPTS
+
+1.1 What is Classification?
+
+Classification is a supervised machine learning technique used to predict
+a category or class from given input features.
+
+For example, a model can classify an email as spam or not spam, or classify
+a car into an acceptability category.
+
+In this practical, the model predicts one of four car evaluation classes:
+unacc, acc, good or vgood.
+
+1.2 What is Random Forest?
+
+Random Forest is a supervised machine learning algorithm used for
+classification and regression.
+
+It is an ensemble learning method. This means it combines the predictions
+of multiple decision trees instead of depending on only one tree.
+
+For classification, each decision tree predicts a class. The Random Forest
+combines the tree predictions using majority voting, and the class with the
+most votes becomes the final prediction.
+
+Random Forest generally improves stability and can reduce overfitting
+compared with relying on a single decision tree.
+
+1.3 What is a Decision Tree?
+
+A Decision Tree is a tree-like model that makes predictions by applying
+a sequence of conditions to the input features.
+
+For example, a tree may first check the safety level of a car, then check
+the number of persons it can accommodate, and continue until it reaches
+a predicted class.
+
+Random Forest builds many decision trees and combines their predictions.
+
+1.4 What is Ensemble Learning?
+
+Ensemble learning combines multiple models to produce a prediction that
+is often more reliable than an individual model.
+
+Random Forest is an example of a bagging-based ensemble method. It trains
+trees using random samples of the training data and random subsets of
+features, then combines their outputs.
+
+1.5 About the Car Evaluation Dataset
+
+The dataset is downloaded from Kaggle using KaggleHub.
+
+It contains:
+• Total observations: 1,728
+• Total columns: 7
+• Input features: 6
+• Target column: class
+
+The six input features are:
+1. buying – buying price of the car
+2. maint – maintenance cost
+3. doors – number of doors
+4. persons – passenger capacity
+5. lug_boot – luggage boot size
+6. safety – safety level
+
+The target class has four possible categories:
+• unacc – unacceptable
+• acc – acceptable
+• good – good
+• vgood – very good
+
+IMPORTANT CLARIFICATION ABOUT THE PRACTICAL TITLE
+The notebook title says “Random Forest to Predict Safety of the Car,” but the code actually predicts the encoded target column named class (unacc, acc, good or vgood). The safety column is one of the six input features, not the target. If the invigilator asks, explain that the implemented task is car acceptability/evaluation classification using safety as an input feature.
+
+1.6 What is Label Encoding?
+
+Label Encoding converts categorical text values into numerical labels.
+
+For example, categories such as low, med and high are converted into
+integer codes. This allows Scikit-learn's Random Forest model to process
+the categorical columns.
+
+The encoded numbers are category identifiers. They should not
+automatically be interpreted as meaningful numerical measurements or
+equal distances between categories.
+
+2. IMPORTANT CODE CHUNKS AND EXPLANATIONS
+
+A. DOWNLOAD AND LOAD THE DATASET
+
+Code:
+    path = kagglehub.dataset_download(
+        "elikplim/car-evaluation-data-set"
+    )
+
+    csv_path = os.path.join(path, "car_evaluation.csv")
+    df = pd.read_csv(csv_path, header=None)
+
+Explanation:
+KaggleHub downloads the Car Evaluation dataset and returns the folder
+path where it is stored.
+
+os.path.join() creates the complete path to the CSV file.
+
+The dataset is loaded using Pandas. header=None is used because the
+CSV file does not contain column headings. Therefore, the code assigns
+the column names manually.
+
+B. ASSIGN COLUMN NAMES
+
+Code:
+    df.columns = [
+        'buying', 'maint', 'doors', 'persons',
+        'lug_boot', 'safety', 'class'
+    ]
+
+Explanation:
+The seven columns are named according to the dataset description.
+
+The first six columns describe the car, and the final column, class,
+contains the evaluation category that the model must predict.
+
+The notebook confirms that the dataset shape is (1728, 7).
+
+C. CHECK MISSING VALUES
+
+Code:
+    print(df.isnull().sum())
+
+Explanation:
+This checks whether any column contains missing values.
+
+The notebook output shows zero missing values in all seven columns.
+Therefore, no missing-value imputation is required.
+
+D. ENCODE THE CATEGORICAL DATA
+
+Code:
+    encoder = LabelEncoder()
+
+    for col in df.columns:
+        df[col] = encoder.fit_transform(df[col])
+
+Explanation:
+The dataset contains categorical text values such as vhigh, high, med,
+low, small, big, unacc and acc.
+
+Machine learning models in Scikit-learn generally require numerical
+input, so LabelEncoder converts the categories in each column into
+integer codes.
+
+The loop applies fit_transform() separately to every column:
+1. fit() identifies the unique categories in that column.
+2. transform() replaces each category with its numerical code.
+
+The target column class is also encoded, so the model can learn and
+predict numerical class labels.
+
+IMPORTANT:
+LabelEncoder is reused in the loop, but fit_transform() is called
+separately for each column. Therefore, each column receives codes based
+on its own categories.
+
+Also remember that encoding categories as numbers does not necessarily
+mean that the categories have equal numerical distances. This is a
+limitation to be aware of when discussing categorical feature encoding.
+
+E. SEPARATE INPUT FEATURES AND TARGET
+
+Code:
+    X = df.drop('class', axis=1)
+    y = df['class']
+
+Explanation:
+X contains the six input features:
+buying, maint, doors, persons, lug_boot and safety.
+
+y contains the encoded class column, which is the output the model must
+predict.
+
+This is supervised learning because the training data contains both
+input features and their corresponding correct target classes.
+
+F. SPLIT INTO TRAINING AND TESTING DATA
+
+Code:
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y,
+        test_size=0.2,
+        random_state=42,
+        stratify=y
+    )
+
+Explanation:
+The dataset is divided into training and testing portions.
+
+• 80% of the observations are used to train the model.
+• 20% are reserved to evaluate the trained model.
+
+test_size=0.2 reserves 20% for testing.
+
+random_state=42 makes the split reproducible.
+
+stratify=y ensures that the proportions of the target classes are
+approximately maintained in both the training and testing sets. This is
+useful because the four classes are not equally represented in the
+dataset.
+
+The notebook's classification report shows 346 test observations.
+
+G. CREATE THE RANDOM FOREST CLASSIFIER
+
+Code:
+    model = RandomForestClassifier(
+        n_estimators=100,
+        random_state=42
+    )
+
+Explanation:
+RandomForestClassifier creates the Random Forest classification model.
+
+Important parameters:
+
+• n_estimators=100: The forest contains 100 decision trees. Their
+predictions are combined to produce the final classification.
+
+• random_state=42: Controls the random processes so the result can be
+reproduced when the same data and settings are used.
+
+H. TRAIN THE MODEL
+
+Code:
+    model.fit(X_train, y_train)
+
+Explanation:
+fit() trains the Random Forest using the training data.
+
+The model builds multiple decision trees using the training observations.
+Each tree learns decision rules from the input features and target labels.
+
+The trained forest combines the predictions of its trees through
+majority voting when classifying a new observation.
+
+I. PREDICT THE CAR EVALUATION CLASS
+
+Code:
+    y_pred = model.predict(X_test)
+
+Explanation:
+predict() uses the trained model to predict the class of each observation
+in X_test.
+
+y_pred contains the predicted encoded classes, while y_test contains the
+actual encoded classes.
+
+These are compared using evaluation metrics to check the model's
+performance on unseen test observations.
+
+J. EVALUATE THE MODEL
+
+Code:
+    accuracy_score(y_test, y_pred)
+
+    classification_report(y_test, y_pred)
+
+    confusion_matrix(y_test, y_pred)
+
+Explanation:
+
+1. Accuracy Score
+
+Accuracy is the proportion of correct predictions out of all predictions.
+
+    Accuracy = Correct Predictions / Total Predictions
+
+The notebook reports:
+
+    Accuracy = 0.9826589595
+    Accuracy ≈ 98.27%
+
+There are 346 test observations. The confusion matrix contains 340
+correct predictions and 6 incorrect predictions.
+
+2. Classification Report
+
+The classification report provides precision, recall, F1-score and
+support for each class.
+
+• Precision: Out of all observations predicted as a particular class,
+how many actually belong to that class?
+
+• Recall: Out of all actual observations belonging to a class, how many
+did the model correctly identify?
+
+• F1-score: The harmonic mean of precision and recall. It balances both
+measures.
+
+• Support: The number of actual test observations belonging to that class.
+
+The report in the notebook shows:
+
+    Class 0: Precision 0.97, Recall 0.95, F1-score 0.96
+    Class 1: Precision 0.93, Recall 0.93, F1-score 0.93
+    Class 2: Precision 0.99, Recall 1.00, F1-score 0.99
+    Class 3: Precision 1.00, Recall 0.92, F1-score 0.96
+
+The numerical labels correspond to the encoded class categories. In
+this dataset's LabelEncoder ordering:
+    0 = acc
+    1 = good
+    2 = unacc
+    3 = vgood
+
+The support values are 77, 14, 242 and 13 respectively.
+
+3. Confusion Matrix
+
+A confusion matrix compares actual classes with predicted classes.
+
+• Rows represent actual classes.
+• Columns represent predicted classes.
+• Diagonal values are correct predictions.
+• Off-diagonal values are incorrect predictions.
+
+The notebook reports:
+
+    [[ 73   1   3   0]
+     [  1  13   0   0]
+     [  0   0 242   0]
+     [  1   0   0  12]]
+
+The diagonal total is:
+    73 + 13 + 242 + 12 = 340 correct predictions.
+
+The remaining six observations were incorrectly classified.
+
+K. VISUALIZE FEATURE IMPORTANCE
+
+Code:
+    plt.bar(X.columns, model.feature_importances_)
+
+    plt.xlabel("Features")
+    plt.ylabel("Importance")
+    plt.title("Random Forest Feature Importances")
+    plt.xticks(rotation=45)
+    plt.tight_layout()
+    plt.show()
+
+Explanation:
+Random Forest can estimate how much each input feature contributes to
+reducing impurity across the trees in the forest. These values are
+available through feature_importances_.
+
+The bar graph compares the relative importance of the six input features.
+
+According to the graph on page 3:
+• safety has the highest importance.
+• persons is the second most important feature.
+• buying and maint also contribute.
+• lug_boot and doors have lower importance in this trained model.
+
+Feature importance indicates how useful a feature was to the fitted
+forest. It does not prove that the feature causes the target outcome.
+
+The graph displays relative importance scores, not percentages of
+causation.
+
+3. EXPLANATION TO PRESENT TO THE INVIGILATOR
+
+Good morning, sir/madam.
+
+The aim of this practical is to predict the evaluation class of a car
+using the Random Forest Classification algorithm.
+
+First, I downloaded the Car Evaluation dataset from Kaggle and loaded it
+using Pandas. The dataset contains 1,728 observations, six input features
+and one target column named class.
+
+I checked for missing values and found that there were no missing values.
+
+Since the dataset contains categorical values, I converted the text
+categories into numerical labels using LabelEncoder. I then separated
+the six input features into X and the target class into y.
+
+Next, I split the dataset into 80% training data and 20% testing data.
+I used stratify=y to maintain approximately the same class proportions
+in both sets.
+
+After that, I created a Random Forest Classifier with 100 decision trees
+and trained it using the training data.
+
+I used the trained model to predict the car evaluation classes for the
+test data. Finally, I evaluated the model using accuracy, classification
+report and confusion matrix.
+
+The model achieved approximately 98.27% accuracy, with 340 correct
+predictions out of 346 test observations.
+
+I also plotted feature importance. The graph shows that safety is the
+most important feature, followed by persons.
+
+Thus, I implemented Random Forest classification to predict car
+evaluation classes and evaluated the model's performance.
+
+4. TEN MOST EXPECTED VIVA QUESTIONS WITH DETAILED ANSWERS
+
+Q1. What is Random Forest? How does it work?
+
+Answer:
+Random Forest is a supervised ensemble machine learning algorithm used
+for classification and regression.
+
+It creates multiple decision trees using random samples of the training
+data and random subsets of features. Each tree makes its own prediction.
+
+For classification, the final prediction is selected through majority
+voting among the trees. For regression, the predictions are generally
+combined by averaging.
+
+Using multiple trees can make the model more stable and can reduce the
+overfitting risk associated with a single decision tree.
+
+Q2. What is the difference between a Decision Tree and Random Forest?
+
+Answer:
+A Decision Tree is a single tree-like model that predicts an output by
+following a sequence of feature-based conditions.
+
+Random Forest combines many decision trees. Each tree is trained with
+randomness in the observations and features considered. Their predictions
+are combined to produce the final result.
+
+A single decision tree is easier to interpret, but it can be sensitive
+to changes in training data. Random Forest generally provides more stable
+predictions, although it is less straightforward to interpret.
+
+Q3. What is ensemble learning? Which type is used in Random Forest?
+
+Answer:
+Ensemble learning is a technique that combines multiple machine learning
+models to produce a final prediction.
+
+Random Forest uses bagging, short for Bootstrap Aggregating. It trains
+multiple decision trees using random samples of the training data and
+combines their predictions.
+
+For classification, it uses majority voting. This helps reduce the
+variance of predictions compared with relying on one decision tree.
+
+Q4. What is the purpose of n_estimators=100?
+
+Answer:
+n_estimators specifies the number of decision trees in the Random Forest.
+
+In this practical, n_estimators=100 means that the model builds 100
+decision trees. Each tree contributes a prediction, and the forest
+combines the predictions using majority voting.
+
+Increasing the number of trees can improve stability, but it also
+increases training time and computational cost. More trees do not
+guarantee better performance in every situation.
+
+Q5. What is Label Encoding? Why is it used in this practical?
+
+Answer:
+Label Encoding converts categorical text values into numerical integer
+codes.
+
+For example, categories such as low, med and high are represented by
+numbers. This allows the Scikit-learn model to process the categorical
+columns.
+
+In this practical, LabelEncoder is applied to all columns, including
+the target class.
+
+One limitation is that the assigned numbers may imply an order or
+distance that is not necessarily meaningful. The encoding should
+therefore be understood as category representation, not as a real
+measurement.
+
+Q6. What is the difference between classification and regression?
+
+Answer:
+Classification predicts a discrete category or class. Examples include
+predicting whether an email is spam or classifying a car as acceptable
+or unacceptable.
+
+Regression predicts a continuous numerical value. Examples include
+predicting house prices, temperature or salary.
+
+This practical is a classification problem because the output is one
+of four categories: unacc, acc, good or vgood.
+
+Q7. What is a confusion matrix? Explain the confusion matrix in this
+practical.
+
+Answer:
+A confusion matrix is a table that compares actual class labels with
+predicted class labels.
+
+Rows represent actual classes and columns represent predicted classes.
+Values on the main diagonal represent correct predictions, while
+off-diagonal values represent incorrect predictions.
+
+In this practical, the matrix is 4 × 4 because there are four target
+classes. Its diagonal values are 73, 13, 242 and 12.
+
+Adding these values gives 340 correct predictions. The other six
+observations were incorrectly classified.
+
+Q8. What are precision, recall and F1-score?
+
+Answer:
+Precision measures how many observations predicted as a particular
+class actually belong to that class.
+
+Recall measures how many of the actual observations belonging to a
+class were correctly identified by the model.
+
+F1-score is the harmonic mean of precision and recall. It provides a
+single measure that balances both.
+
+These metrics are useful when evaluating classification models,
+especially when the classes have different numbers of observations.
+
+Q9. What is stratify=y in train_test_split? Why is it used here?
+
+Answer:
+stratify=y tells train_test_split to preserve approximately the same
+class proportions in the training and testing sets as in the original
+dataset.
+
+This is useful when the target classes are imbalanced, meaning some
+classes have many more observations than others.
+
+The Car Evaluation dataset has unequal class frequencies. Stratification
+helps ensure that the test set contains representative examples of
+each class.
+
+Q10. What is feature importance? Which feature is most important in
+this practical?
+
+Answer:
+Feature importance estimates how much each input feature contributes
+to the Random Forest's predictions, based on impurity reduction across
+the trees.
+
+The feature importance graph in this practical shows that safety has
+the highest importance, followed by persons.
+
+This suggests that these features were particularly useful to the
+trained model when predicting the car evaluation class.
+
+However, feature importance does not prove causation. It describes
+the contribution of features within this fitted model.
+
+5. IMPORTANT FORMULAS AND QUICK REVISION
+
+Accuracy:
+    Accuracy = Correct Predictions / Total Predictions
+
+Precision:
+    Precision = TP / (TP + FP)
+
+Recall:
+    Recall = TP / (TP + FN)
+
+F1-score:
+    F1 = 2 × (Precision × Recall) / (Precision + Recall)
+
+Where:
+• TP = True Positives
+• FP = False Positives
+• FN = False Negatives
+
+PRACTICAL FACTS
+• Practical: Random Forest to Predict Safety of the Car
+• Learning type: Supervised learning
+• Problem type: Multi-class classification
+• Dataset: Car Evaluation dataset from Kaggle
+• Total observations: 1,728
+• Input features: 6
+• Target column: class
+• Target categories: unacc, acc, good, vgood
+• Missing values: None
+• Encoding: LabelEncoder applied to every column
+• Train-test split: 80:20
+• Stratification: stratify=y
+• Model: RandomForestClassifier
+• Number of trees: 100
+• Random state: 42
+• Evaluation: Accuracy, classification report, confusion matrix
+• Test observations: 346
+• Accuracy: Approximately 98.27%
+• Correct predictions: 340
+• Incorrect predictions: 6
+• Most important feature in the plotted result: safety
+• Second most important feature: persons
+
+IMPORTANT POINTS TO REMEMBER
+1. Random Forest is a supervised ensemble learning algorithm.
+2. It combines multiple decision trees.
+3. Classification predictions are combined using majority voting.
+4. n_estimators=100 means the forest contains 100 trees.
+5. LabelEncoder converts categorical values into integer codes.
+6. stratify=y maintains class proportions in train and test sets.
+7. The model achieved approximately 98.27% test accuracy.
+8. The confusion matrix shows 340 correct and 6 incorrect predictions.
+9. Safety is the most important feature in the notebook's feature
+importance graph.
+10. Feature importance does not establish causation.
+
+END OF PRACTICAL 5

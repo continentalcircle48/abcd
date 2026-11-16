@@ -1,0 +1,621 @@
+# ML-3: SVM for Classifying Handwritten Digits
+
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+
+from sklearn.datasets import load_digits
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.svm import SVC
+from sklearn.metrics import accuracy_score, confusion_matrix
+
+# Load the dataset
+digits = load_digits()
+
+X = digits.data
+y = digits.target
+
+df = pd.DataFrame(X)
+df['target'] = y
+
+print('Original Shape:', X.shape)
+print('Classes:', np.unique(y))
+
+# Basic data exploration
+
+print('First 5 Rows:')
+display(df.head())
+
+print('Dataset Shape:')
+print(df.shape)
+
+print('Dataset Information:')
+df.info()
+
+print('Statistical Description:')
+display(df.describe())
+
+print('Column Names:')
+print(df.columns)
+
+print('Missing Values (column-wise):')
+print(df.isnull().sum())
+
+print('Total Missing Values:')
+print(df.isnull().sum().sum())
+
+print('Duplicate Rows:')
+print(df.duplicated().sum())
+
+print('Digit Class Distribution:')
+print(df['target'].value_counts().sort_index())
+
+# Visualize a sample handwritten digit
+
+plt.imshow(digits.images[0], cmap='gray')
+plt.title('Actual Digit: ' + str(y[0]))
+plt.axis('off')
+plt.show()
+
+# Split the dataset into training and testing sets
+
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42
+)
+
+print('Training data shape:', X_train.shape)
+print('Testing data shape:', X_test.shape)
+
+# Feature scaling
+
+scaler = StandardScaler()
+X_train = scaler.fit_transform(X_train)
+X_test = scaler.transform(X_test)
+
+# Train the SVM model
+
+model = SVC(kernel='linear')
+model.fit(X_train, y_train)
+
+# Make predictions
+
+y_pred = model.predict(X_test)
+
+# Evaluate the model
+
+print('Accuracy Score:', accuracy_score(y_test, y_pred))
+
+print('\nConfusion Matrix:')
+print(confusion_matrix(y_test, y_pred))
+
+print('\nActual Values:   ', y_test[:10])
+print('Predicted Values:', y_pred[:10])
+
+
+
+###############################################################################################################################
+###############################################################################################################################
+###############################################################################################################################
+
+
+
+PRACTICAL 3
+HANDWRITTEN DIGIT CLASSIFICATION USING SUPPORT VECTOR MACHINE (SVM)
+Machine Learning Laboratory – 417525
+
+PROBLEM STATEMENT
+Apply the Support Vector Machine (SVM) algorithm to classify handwritten
+digits using the Digits dataset and evaluate the model's performance.
+
+1. MAIN CONCEPTS
+
+1.1 What is Classification?
+
+Classification is a supervised machine learning technique used to predict
+the category or class of an observation.
+
+For example, an image of a handwritten digit can be classified as 0, 1, 2,
+and so on up to 9.
+
+In this practical, the model receives pixel values of handwritten digit
+images and predicts which digit each image represents.
+
+1.2 What is SVM?
+
+SVM stands for Support Vector Machine. It is a supervised machine learning
+algorithm mainly used for classification and also usable for regression.
+
+SVM tries to find the best decision boundary, called a hyperplane, that
+separates different classes.
+
+The main objective is to maximize the margin, which is the distance between
+the decision boundary and the closest data points from the classes.
+
+Important terms:
+• Hyperplane: The decision boundary that separates classes.
+• Margin: The distance between the hyperplane and the nearest data points.
+• Support vectors: The data points closest to the hyperplane. They help
+determine the position and orientation of the decision boundary.
+• Kernel: A function that allows SVM to create decision boundaries for
+different patterns, including non-linear ones.
+
+1.3 What is a Linear Kernel?
+
+The practical uses:
+
+    model = SVC(kernel='linear')
+
+A linear kernel creates a linear decision boundary in the feature space.
+It is suitable when the classes can be separated reasonably well using
+linear boundaries.
+
+SVC is the Support Vector Classifier implementation provided by
+Scikit-learn.
+
+1.4 About the Digits Dataset
+
+The practical uses Scikit-learn's built-in load_digits() dataset.
+
+• Total images: 1,797.
+• Image dimensions: 8 × 8 pixels.
+• Features per image: 64 pixel values.
+• Classes: 10 digits, from 0 to 9.
+• Pixel values: Numerical intensity values, generally from 0 to 16.
+
+Each 8 × 8 image is represented as a one-dimensional row containing 64
+pixel values. These 64 values become the input features for SVM.
+
+The target contains the actual digit label, from 0 to 9.
+
+2. IMPORTANT CODE CHUNKS AND EXPLANATIONS
+
+A. LOAD THE DIGITS DATASET
+
+Code:
+    from sklearn.datasets import load_digits
+
+    digits = load_digits()
+
+    X = digits.data
+    y = digits.target
+
+    df = pd.DataFrame(X)
+    df['target'] = y
+
+Explanation:
+load_digits() loads the handwritten digits dataset available in
+Scikit-learn.
+
+X = digits.data stores the pixel information of all images. Each image is
+flattened into 64 numerical features.
+
+y = digits.target stores the correct digit labels, from 0 to 9.
+
+The DataFrame is created to make the features and target easier to inspect.
+
+The output confirms:
+
+    Original Shape: (1797, 64)
+    Classes: [0 1 2 3 4 5 6 7 8 9]
+
+This means there are 1,797 observations and 64 input features per
+observation.
+
+B. EXPLORE THE DATASET
+
+Code:
+    print(df.shape)
+    df.info()
+    df.describe()
+    print(df.isnull().sum())
+    print(df.duplicated().sum())
+
+Explanation:
+These checks help understand the dataset before training.
+
+The DataFrame has 65 columns: 64 pixel features and one target column.
+The notebook shows:
+• 1,797 observations.
+• No missing values.
+• No duplicate rows.
+• Ten digit classes, from 0 to 9.
+
+The class distribution is also checked using:
+
+    df['target'].value_counts().sort_index()
+
+The number of samples per digit is fairly balanced. Each digit has between
+174 and 183 observations.
+
+C. VISUALIZE A SAMPLE HANDWRITTEN DIGIT
+
+Code:
+    plt.imshow(digits.images[0], cmap='gray')
+    plt.title('Actual Digit: ' + str(y[0]))
+    plt.axis('off')
+    plt.show()
+
+Explanation:
+This code displays the first handwritten digit image.
+
+digits.images[0] accesses the original two-dimensional 8 × 8 image.
+cmap='gray' displays it using shades of grey.
+
+The title shows the actual label of the image. In the notebook, the
+displayed sample is labelled as digit 0.
+
+This visualization helps us understand what the pixel data represents.
+
+D. SPLIT THE DATASET INTO TRAINING AND TESTING SETS
+
+Code:
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=0.2, random_state=42
+    )
+
+Explanation:
+The dataset is divided into training and testing parts.
+
+• 80% of the data is used to train the model.
+• 20% is reserved to test the trained model.
+
+test_size=0.2 means that 20% of the observations are used for testing.
+
+random_state=42 ensures that the same split can be reproduced when the
+code is run again with the same dataset and settings.
+
+The notebook reports:
+
+    Training data shape: (1437, 64)
+    Testing data shape: (360, 64)
+
+Therefore, 1,437 images are used for training and 360 images are used for
+testing.
+
+E. FEATURE SCALING USING STANDARDSCALER
+
+Code:
+    scaler = StandardScaler()
+    X_train = scaler.fit_transform(X_train)
+    X_test = scaler.transform(X_test)
+
+Explanation:
+StandardScaler standardizes each input feature by subtracting its mean
+and dividing by its standard deviation.
+
+    Z = (X - mean) / standard_deviation
+
+After standardization, each feature has approximately zero mean and unit
+standard deviation, based on the data used to fit the scaler.
+
+The scaler is fitted only on X_train. It learns the mean and standard
+deviation from the training data. The same scaling values are then applied
+to both the training and testing data.
+
+Feature scaling is important for SVM because distances and margins are
+affected by the scale of the features. Without scaling, features with
+larger numerical ranges can have an excessive influence.
+
+F. CREATE AND TRAIN THE SVM MODEL
+
+Code:
+    model = SVC(kernel='linear')
+    model.fit(X_train, y_train)
+
+Explanation:
+SVC() creates a Support Vector Classifier.
+
+kernel='linear' specifies that a linear kernel is used to form the decision
+boundaries.
+
+fit() trains the SVM model using:
+• X_train: The standardized pixel values.
+• y_train: The correct digit labels.
+
+SVM learns decision boundaries that separate the digit classes by
+maximizing the margin, with the support vectors helping define those
+boundaries.
+
+This is a multi-class classification task because there are ten possible
+digit classes. Scikit-learn's SVC handles multi-class classification
+internally.
+
+G. MAKE PREDICTIONS
+
+Code:
+    y_pred = model.predict(X_test)
+
+Explanation:
+After training, predict() is used to classify the 360 test images.
+
+The model examines the pixel features of each test image and predicts a
+digit label between 0 and 9.
+
+y_pred contains the predicted labels, while y_test contains the actual
+labels. These two arrays are compared to evaluate the model.
+
+H. EVALUATE THE MODEL
+
+Code:
+    print('Accuracy Score:', accuracy_score(y_test, y_pred))
+
+    print('Confusion Matrix:')
+    print(confusion_matrix(y_test, y_pred))
+
+Explanation:
+The model is evaluated using accuracy and a confusion matrix.
+
+1. Accuracy Score
+
+Accuracy is the proportion of correctly classified observations out of
+the total number of observations.
+
+    Accuracy = Correct Predictions / Total Predictions
+
+The notebook reports:
+
+    Accuracy Score: 0.975
+
+Therefore, the model correctly classified 97.5% of the test images.
+
+Out of 360 test images, this corresponds to 351 correctly classified
+images and 9 incorrectly classified images.
+
+2. Confusion Matrix
+
+A confusion matrix compares actual classes with predicted classes.
+
+• Each row represents an actual class.
+• Each column represents a predicted class.
+• Diagonal values represent correct predictions.
+• Values outside the diagonal represent incorrect predictions.
+
+The notebook's confusion matrix is a 10 × 10 matrix because there are ten
+digit classes.
+
+For example, the row for digit 3 contains 33 correct predictions for digit
+3 and one image incorrectly predicted as digit 5.
+
+The matrix helps identify which digits the model confuses with one another.
+
+I. COMPARE ACTUAL AND PREDICTED VALUES
+
+Code:
+    print('Actual Values:   ', y_test[:10])
+    print('Predicted Values:', y_pred[:10])
+
+Explanation:
+This displays the first ten actual test labels and their corresponding
+predicted labels.
+
+In the notebook, the displayed actual and predicted values match:
+
+    Actual:    [6 9 3 7 2 1 5 2 5 2]
+    Predicted: [6 9 3 7 2 1 5 2 5 2]
+
+This gives a small example of the model's predictions. The overall
+accuracy and confusion matrix provide evaluation across the complete
+test set.
+
+3. EXPLANATION TO PRESENT TO THE INVIGILATOR
+
+Good morning, sir/madam.
+
+The aim of this practical is to classify handwritten digits using the
+Support Vector Machine algorithm.
+
+First, I loaded the built-in Digits dataset from Scikit-learn. It contains
+1,797 handwritten digit images. Each image is of size 8 × 8 pixels, so it
+is represented using 64 pixel features. The target labels range from 0
+to 9.
+
+Next, I explored the dataset and checked for missing values and duplicate
+records. The dataset contains no missing values or duplicate rows. I also
+visualized one sample handwritten digit using a grayscale image.
+
+Then, I divided the dataset into 80% training data and 20% testing data.
+I standardized the features using StandardScaler because SVM is sensitive
+to feature scales. The scaler was fitted on the training data and the same
+transformation was applied to the test data.
+
+After that, I created an SVM classifier using SVC with a linear kernel and
+trained it using the training data.
+
+I used the trained model to predict the digit labels for the test images.
+Finally, I evaluated the model using accuracy score and a confusion matrix.
+
+The model achieved an accuracy of 97.5%, which means it correctly
+classified 97.5% of the test images.
+
+Thus, I successfully implemented SVM for handwritten digit classification
+and evaluated its performance.
+
+4. TEN MOST EXPECTED VIVA QUESTIONS WITH DETAILED ANSWERS
+
+Q1. What is SVM? How does it work?
+
+Answer:
+SVM stands for Support Vector Machine. It is a supervised machine learning
+algorithm used mainly for classification and also for regression.
+
+SVM finds a decision boundary called a hyperplane that separates different
+classes. It tries to maximize the margin, which is the distance between
+the hyperplane and the nearest data points from the classes.
+
+The nearest points are called support vectors. They are important because
+they determine the position of the decision boundary.
+
+Q2. What are support vectors and a hyperplane?
+
+Answer:
+A hyperplane is the decision boundary used by SVM to separate classes.
+In two dimensions, it is a line. In three dimensions, it is a plane. In
+higher-dimensional feature spaces, it is called a hyperplane.
+
+Support vectors are the data points closest to the decision boundary.
+These points determine the margin and influence the position of the
+hyperplane.
+
+Q3. What is a kernel in SVM? Which kernel is used in this practical?
+
+Answer:
+A kernel is a function used by SVM to calculate relationships between
+data points and construct decision boundaries.
+
+Kernels allow SVM to handle different types of patterns:
+• Linear: Creates a linear decision boundary.
+• Polynomial: Represents polynomial relationships.
+• RBF: Can create non-linear decision boundaries.
+• Sigmoid: Uses a sigmoid-based kernel function.
+
+This practical uses kernel='linear', so the classifier uses a linear
+decision boundary in the feature space.
+
+Q4. Why is SVM suitable for classification?
+
+Answer:
+SVM is useful for classification because it finds a decision boundary
+that separates classes while maximizing the margin.
+
+It can work effectively in high-dimensional feature spaces. This is
+helpful in this practical because every handwritten image is represented
+using 64 pixel features.
+
+SVM can also use different kernels to handle linear and non-linear
+classification problems.
+
+Q5. Why do we use StandardScaler before applying SVM?
+
+Answer:
+StandardScaler brings features to a comparable scale by subtracting the
+mean and dividing by the standard deviation.
+
+SVM uses distances and margins to determine its decision boundary.
+Features with larger numerical scales can have a greater influence on
+these calculations.
+
+Therefore, scaling helps prevent features with larger ranges from
+dominating the model.
+
+Q6. Why is the Digits dataset represented using 64 features?
+
+Answer:
+Each handwritten digit image in this dataset has dimensions of 8 × 8
+pixels.
+
+Therefore, each image contains:
+
+    8 × 8 = 64 pixels
+
+Each pixel is represented by a numerical intensity value. The 8 × 8
+image is flattened into a one-dimensional array of 64 values, which
+becomes one observation with 64 input features.
+
+Q7. Is this a binary or multi-class classification problem?
+
+Answer:
+This is a multi-class classification problem because the model predicts
+one of ten possible classes: digits 0 through 9.
+
+Binary classification involves only two classes, whereas multi-class
+classification involves more than two classes.
+
+Scikit-learn's SVC supports multi-class classification, so the practical
+can train one SVC model for all ten digit classes.
+
+Q8. What is a confusion matrix? How do you interpret it?
+
+Answer:
+A confusion matrix is a table used to evaluate a classification model by
+comparing actual labels with predicted labels.
+
+In this practical, it is a 10 × 10 matrix because there are ten digit
+classes.
+
+Rows represent actual classes and columns represent predicted classes.
+Values on the main diagonal represent correct predictions. Values outside
+the diagonal represent misclassifications.
+
+It helps identify which digits are classified correctly and which digits
+are confused with other digits.
+
+Q9. What is accuracy? Explain the accuracy obtained in this practical.
+
+Answer:
+Accuracy is the ratio of correctly classified observations to the total
+number of observations.
+
+    Accuracy = Correct Predictions / Total Predictions
+
+The model achieved an accuracy of 0.975, or 97.5%.
+
+There are 360 test images. Therefore, 97.5% accuracy corresponds to
+351 correct predictions and 9 incorrect predictions.
+
+This indicates that the trained SVM model performs well on the test
+data used in this practical.
+
+Q10. What is the difference between classification and regression?
+Can SVM be used for both?
+
+Answer:
+Classification predicts a category or class, such as identifying a
+handwritten digit as 0, 1 or 2.
+
+Regression predicts a continuous numerical value, such as house price,
+salary or temperature.
+
+SVM can be used for both tasks:
+• SVC (Support Vector Classifier) is used for classification.
+• SVR (Support Vector Regression) is used for regression.
+
+This practical uses SVC because the objective is to classify images into
+digit categories.
+
+5. IMPORTANT FORMULAS AND QUICK REVISION
+
+Standardization:
+    Z = (X - mean) / standard_deviation
+
+Accuracy:
+    Accuracy = Correct Predictions / Total Predictions
+
+Margin:
+    The distance between the decision boundary and the closest support
+    vectors.
+
+PRACTICAL FACTS
+• Practical: Handwritten Digit Classification
+• Algorithm: Support Vector Machine (SVM)
+• Learning type: Supervised learning
+• Problem type: Multi-class classification
+• Dataset: Scikit-learn Digits dataset
+• Total observations: 1,797
+• Image size: 8 × 8 pixels
+• Input features: 64 pixel values
+• Classes: 10 (digits 0 to 9)
+• Training observations: 1,437
+• Testing observations: 360
+• Train-test split: 80:20
+• Scaling method: StandardScaler
+• Classifier: SVC(kernel='linear')
+• Evaluation metrics: Accuracy and confusion matrix
+• Accuracy achieved: 97.5%
+• Correct test predictions: 351
+• Incorrect test predictions: 9
+
+IMPORTANT POINTS TO REMEMBER
+1. SVM is a supervised learning algorithm.
+2. SVC is used for classification; SVR is used for regression.
+3. SVM finds a hyperplane that maximizes the margin between classes.
+4. Support vectors are the data points closest to the hyperplane.
+5. The practical uses a linear kernel.
+6. Each 8 × 8 digit image is represented by 64 pixel features.
+7. There are ten classes, representing digits 0 through 9.
+8. StandardScaler is fitted on training data and then applied to test data.
+9. The model achieved 97.5% test accuracy.
+10. The confusion matrix shows the correct and incorrect classifications
+    for each digit class.
+
+END OF PRACTICAL 3

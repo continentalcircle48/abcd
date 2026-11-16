@@ -1,0 +1,722 @@
+#DMV-1 : CSV, Excel, JSON - Analyzing Sales Data from Multiple File Formats
+
+import pandas as pd
+import numpy as np
+import json
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# Step 1: Create CSV dataset
+csv_data = {
+    'Transaction_ID': [101, 102, 103, 104, 105, 105],
+    'Product': ['Laptop', 'Mouse', 'Monitor', 'Keyboard', 'Laptop', 'Laptop'],
+    'Price': [1200, 25, 300, 80, 1200, 1200],
+    'Quantity': [1, 2, np.nan, 1, 1, 1],
+    'Date': ['2023-10-01', '2023-10-01', '2023-10-02',
+             '2023-10-03', '2023-10-04', '2023-10-04']
+}
+
+pd.DataFrame(csv_data).to_csv('sales_data.csv', index=False)
+
+# Step 2: Create Excel dataset
+excel_data = {
+    'Transaction_ID': [106, 107, 108],
+    'Product': ['mouse', 'Tablet', 'Monitor'],
+    'Price': [25, 450, 300],
+    'Quantity': [5, 1, 2],
+    'Date': ['2023-10-05', '2023-10-06', '2023-10-07']
+}
+
+pd.DataFrame(excel_data).to_excel('sales_data.xlsx', index=False)
+
+# Step 3: Create JSON dataset
+json_data = [
+    {'Transaction_ID': 109, 'Product': 'Keyboard',
+     'Price': 80, 'Quantity': 3, 'Date': '2023-10-08'},
+    {'Transaction_ID': 110, 'Product': 'Laptop',
+     'Price': 1200, 'Quantity': 1, 'Date': '2023-10-09'}
+]
+
+with open('sales_data.json', 'w') as f:
+    json.dump(json_data, f)
+
+print("Sample files created successfully!")
+
+# Step 4: Load datasets
+df_csv = pd.read_csv('sales_data.csv')
+df_excel = pd.read_excel('sales_data.xlsx')
+df_json = pd.read_json('sales_data.json')
+
+# Step 5: Explore datasets
+print("\nCSV Data:")
+print(df_csv.head())
+df_csv.info()
+
+print("\nExcel Data:")
+print(df_excel.head())
+df_excel.info()
+
+print("\nJSON Data:")
+print(df_json.head())
+df_json.info()
+
+# Step 6: Combine datasets
+df = pd.concat([df_csv, df_excel, df_json],
+               ignore_index=True)
+
+print("\nMissing Values:")
+print(df.isnull().sum())
+
+# Step 7: Clean data
+df = df.drop_duplicates().copy()
+df['Quantity'] = df['Quantity'].fillna(1)
+df['Product'] = df['Product'].str.capitalize()
+df['Date'] = pd.to_datetime(df['Date'])
+
+# Step 8: Calculate revenue
+df['Total_Revenue'] = df['Price'] * df['Quantity']
+
+print("\nCleaned Dataset:")
+print(df)
+
+# Step 9: Sales analysis
+total_sales = df['Total_Revenue'].sum()
+avg_sales = df['Total_Revenue'].mean()
+
+product_sales = df.groupby('Product')['Total_Revenue'].sum().reset_index()
+
+print("\nTotal Revenue:", total_sales)
+print("Average Order Value:", avg_sales)
+
+print("\nProduct-wise Sales:")
+print(product_sales)
+
+# Step 10: Visualization
+sns.set_theme(style="whitegrid")
+plt.figure(figsize=(12, 5))
+# Bar Chart
+plt.subplot(1, 2, 1)
+sns.barplot(data=product_sales, x='Product',
+            y='Total_Revenue', color='skyblue')
+plt.title('Sales Revenue by Product')
+plt.xlabel('Product')
+plt.ylabel('Revenue')
+
+# Line Chart
+plt.subplot(1, 2, 2)
+daily_sales = df.groupby('Date')['Total_Revenue'].sum().reset_index()
+sns.lineplot(data=daily_sales, x='Date',
+             y='Total_Revenue', marker='o')
+plt.title('Daily Revenue Trend')
+plt.xlabel('Date')
+plt.ylabel('Revenue')
+plt.xticks(rotation=45)
+
+plt.tight_layout()
+plt.show()
+
+
+
+###############################################################################################################################
+###############################################################################################################################
+###############################################################################################################################
+
+
+
+
+DMV PRACTICAL 1
+DATA LOADING, STORAGE AND FILE FORMATS
+Analyzing Sales Data from Multiple File Formats (CSV, Excel and JSON)
+
+============================================================
+1. PRACTICAL OVERVIEW
+============================================================
+
+Problem statement:
+Load sales data stored in CSV, Excel and JSON formats, explore the
+datasets, clean and combine them into one dataset, perform sales
+analysis, and visualize the results.
+
+Main objective:
+To demonstrate how data from different file formats can be read
+using Python, converted into a common Pandas DataFrame, cleaned,
+analyzed and visualized.
+
+The notebook creates sample data files first and then reads those
+files back. The three files contain the same five fields:
+- Transaction_ID
+- Product
+- Price
+- Quantity
+- Date
+
+============================================================
+2. CODE VERIFICATION
+============================================================
+
+Overall verdict:
+The code follows the main flow of the problem statement and the
+reported calculations are consistent with the sample data. It
+creates CSV, Excel and JSON files, reads all three, combines them,
+checks missing values, removes duplicate rows, standardizes product
+capitalization, converts dates, calculates revenue, performs
+aggregations and creates charts.
+
+Important observations and improvements:
+
+1. Duplicate handling:
+   The CSV sample contains two identical rows for Transaction_ID 105.
+   drop_duplicates() removes the repeated row. This is correct for
+   this sample because the rows are exact duplicates. In a real sales
+   system, do not remove records solely because a transaction ID is
+   repeated unless the business rules confirm that the records are
+   duplicate transactions.
+
+2. Missing quantity:
+   One CSV row has a missing Quantity. The code fills it with 1.
+   This makes the revenue calculation possible, but 1 is an
+   assumption, not a value proven by the data. In a real dataset,
+   verify the correct quantity or choose an appropriate imputation
+   or removal strategy.
+
+3. Product name standardization:
+   str.capitalize() changes the first character to uppercase and
+   the remaining characters to lowercase. It correctly changes
+   "mouse" to "Mouse" in this sample. For product names containing
+   intentional internal capitalization, this method may alter the
+   original spelling.
+
+4. Index after removing duplicates:
+   drop_duplicates() removes duplicate rows but does not reset the
+   DataFrame index. That is why the displayed cleaned dataset has
+   index values such as 0, 1, 2, 3, 4, 6, 7, 8, 9 and 10.
+   This is not a data error. To make the index consecutive, use:
+       df = df.drop_duplicates().reset_index(drop=True)
+
+5. Average Order Value:
+   The code calculates the mean of Total_Revenue for each remaining
+   row. This is a valid average transaction value if each row
+   represents one order/transaction. If one transaction can contain
+   multiple product rows, calculate revenue per unique order first.
+
+6. Excel dependency:
+   Depending on the environment, reading/writing .xlsx files may
+   require openpyxl. If Pandas reports a missing Excel engine, install
+   openpyxl.
+
+7. Visualization:
+   The code creates a product-wise bar chart and a daily revenue
+   line chart. These meet the visualization requirement. The chart
+   output in the notebook print view looks cramped, but the plotting
+   commands themselves are appropriate. If needed, increase figure
+   size or adjust subplot spacing.
+
+8. Scope of the practical:
+   The notebook creates sample files programmatically rather than
+   importing pre-existing sales files supplied from outside. It still
+   demonstrates writing and reading the three formats, but if the
+   examiner expects existing files, use the same read functions with
+   those file paths.
+
+============================================================
+3. IMPORTANT CODE CHUNKS AND EXPLANATIONS
+============================================================
+
+A. Creating sample data in three formats
+
+The notebook first prepares three collections of sales records.
+
+- csv_data is a dictionary of columns and values for the CSV file.
+- excel_data contains another set of sales records for Excel.
+- json_data is a list of dictionaries, where each dictionary
+  represents one transaction.
+
+The sample CSV deliberately includes:
+- A repeated transaction row.
+- One missing Quantity value.
+
+The Excel data contains "mouse" in lowercase to demonstrate
+standardization of inconsistent text. JSON contains two more records.
+
+B. Saving data into files
+
+CSV:
+    pd.DataFrame(csv_data).to_csv('sales_data.csv', index=False)
+
+The dictionary is converted into a DataFrame and saved as a CSV file.
+index=False prevents Pandas from adding the DataFrame row index as an
+extra column in the file.
+
+Excel:
+    pd.DataFrame(excel_data).to_excel('sales_data.xlsx', index=False)
+
+This converts the Excel dictionary into a DataFrame and stores it in
+an Excel workbook with the .xlsx extension.
+
+JSON:
+    with open('sales_data.json', 'w') as f:
+        json.dump(json_data, f)
+
+The file is opened in write mode. json.dump() writes the Python list
+of transaction dictionaries in JSON format.
+
+Concept:
+CSV stores tabular values as comma-separated text. Excel stores
+spreadsheet data in a workbook format. JSON stores structured data
+using key-value pairs and arrays. They represent data differently,
+but the records can be loaded into a common DataFrame.
+
+C. Loading the three files
+
+    df_csv = pd.read_csv('sales_data.csv')
+    df_excel = pd.read_excel('sales_data.xlsx')
+    df_json = pd.read_json('sales_data.json')
+
+These Pandas functions read the respective formats and convert them
+into DataFrames.
+
+A DataFrame is a two-dimensional table with rows and columns. Using
+DataFrames gives us a common structure for analysis even though the
+original files have different formats.
+
+D. Combining the datasets
+
+    df = pd.concat([df_csv, df_excel, df_json],
+                   ignore_index=True)
+
+pd.concat() combines the three DataFrames vertically, one below
+another. This is appropriate because all three datasets have the
+same columns and represent the same type of records.
+
+ignore_index=True creates a fresh sequence of row indexes in the
+combined DataFrame instead of retaining the old indexes from each
+individual DataFrame.
+
+E. Checking missing values
+
+    df.isnull().sum()
+
+isnull() identifies missing values and returns True for missing
+entries. sum() counts the True values column-wise.
+
+In the output, Quantity has one missing value. The other columns
+have zero missing values.
+
+F. Cleaning the data
+
+    df = df.drop_duplicates().copy()
+    df['Quantity'] = df['Quantity'].fillna(1)
+    df['Product'] = df['Product'].str.capitalize()
+    df['Date'] = pd.to_datetime(df['Date'])
+
+Explanation:
+
+- drop_duplicates() removes completely repeated rows.
+- copy() creates a separate DataFrame copy for subsequent changes.
+- fillna(1) replaces the missing Quantity with 1.
+- str.capitalize() standardizes product names, for example "mouse"
+  becomes "Mouse".
+- pd.to_datetime() converts the Date column from text/object format
+  into Pandas datetime format.
+
+Why convert dates?
+Datetime values can be sorted chronologically and grouped by day,
+month or year. They are more suitable for time-based analysis than
+ordinary text strings.
+
+G. Calculating total revenue
+
+    df['Total_Revenue'] = df['Price'] * df['Quantity']
+
+A new column is created by multiplying the price of one unit by the
+number of units sold.
+
+Formula:
+    Total Revenue = Price per Unit x Quantity Sold
+
+Example:
+If a mouse costs 25 and the quantity is 2:
+    Total_Revenue = 25 x 2 = 50
+
+This calculated column is used for all further sales analysis.
+
+H. Overall sales analysis
+
+    total_sales = df['Total_Revenue'].sum()
+    avg_sales = df['Total_Revenue'].mean()
+
+sum() calculates the total revenue from all transactions.
+mean() calculates the average revenue per transaction row.
+
+The notebook reports:
+- Total Revenue = 5445
+- Average Order Value = 544.5
+
+There are 10 remaining transaction rows, so:
+    5445 / 10 = 544.5
+
+I. Product-wise sales aggregation
+
+    product_sales = (
+        df.groupby('Product')['Total_Revenue']
+          .sum()
+          .reset_index()
+    )
+
+groupby('Product') groups rows that have the same product name.
+['Total_Revenue'].sum() adds the revenue within each product group.
+reset_index() converts the grouped result back into a regular
+DataFrame.
+
+Reported product-wise revenue:
+- Laptop: 3600
+- Monitor: 900
+- Tablet: 450
+- Keyboard: 320
+- Mouse: 175
+
+Laptop generates the highest revenue in this sample.
+
+J. Product-wise bar chart
+
+    sns.barplot(data=product_sales,
+                x='Product', y='Total_Revenue')
+
+A bar chart compares revenue across product categories.
+- X-axis: Product
+- Y-axis: Total revenue
+- Each bar represents the revenue generated by one product.
+
+It is useful for comparing categories and identifying the
+highest-revenue product.
+
+K. Daily revenue line chart
+
+    daily_sales = (
+        df.groupby('Date')['Total_Revenue']
+          .sum()
+          .reset_index()
+    )
+
+    sns.lineplot(data=daily_sales, x='Date',
+                 y='Total_Revenue', marker='o')
+
+The data is grouped by date and revenue is summed for each date.
+The line chart displays how revenue changes over time.
+
+- X-axis: Date
+- Y-axis: Daily revenue
+- marker='o' displays a point at each date.
+
+A line chart is useful for showing trends over an ordered sequence
+such as dates. The notebook also rotates date labels so they are
+easier to read.
+
+============================================================
+4. SIMPLE EXPLANATION TO DELIVER TO THE INVIGILATOR
+============================================================
+
+"In this practical, I am analyzing sales data stored in three
+different file formats: CSV, Excel and JSON.
+
+First, I create sample sales datasets and save them in their
+respective formats. Then I load them using Pandas functions:
+read_csv(), read_excel() and read_json().
+
+After loading, I combine all three DataFrames using concat() so
+that the records are available in one common dataset.
+
+Next, I check for missing values and clean the data. I remove
+duplicate rows, replace the missing quantity with 1, standardize
+product names and convert the Date column into datetime format.
+
+Then I calculate total revenue for each transaction by multiplying
+Price by Quantity. I calculate the overall revenue and average
+transaction value. I also group the data by product to calculate
+product-wise revenue.
+
+Finally, I visualize the results using a bar chart for comparing
+product revenue and a line chart for showing daily revenue trends.
+
+Thus, the practical demonstrates loading, combining, cleaning,
+analyzing and visualizing sales data from multiple file formats."
+
+============================================================
+5. TEN MOST EXPECTED VIVA QUESTIONS WITH DETAILED ANSWERS
+============================================================
+
+Q1. What is data visualization?
+
+Answer:
+Data visualization is the graphical representation of data using
+charts, graphs and plots. It makes complex information easier to
+understand and helps identify patterns, trends, comparisons and
+outliers.
+
+Examples include bar charts, line charts, pie charts, histograms
+and scatter plots.
+
+In this practical, the bar chart compares revenue across products,
+while the line chart shows daily revenue trends.
+
+Q2. What is data analysis?
+
+Answer:
+Data analysis is the process of inspecting, cleaning, transforming
+and interpreting data to obtain useful information and support
+decision-making.
+
+For example, in this practical we calculate total revenue,
+average transaction value and product-wise revenue to understand
+sales performance.
+
+Q3. What is data cleaning? Why is it necessary?
+
+Answer:
+Data cleaning is the process of identifying and correcting data
+quality problems such as missing values, duplicate records,
+inconsistent formats and incorrect data types.
+
+It is necessary because poor-quality data can produce incorrect
+analysis and misleading conclusions.
+
+In this practical, duplicate rows are removed, missing Quantity
+is filled, product names are standardized and dates are converted
+to datetime format.
+
+Q4. What is data transformation?
+
+Answer:
+Data transformation is the process of converting data into a
+different or more useful format or structure for analysis.
+
+Examples include changing data types, combining datasets,
+creating calculated columns and converting date strings into
+datetime values.
+
+In this practical, the three file formats are converted into
+Pandas DataFrames, combined, and a Total_Revenue column is created.
+
+Q5. What is the difference between CSV, Excel and JSON?
+
+Answer:
+- CSV: Stores tabular data as plain text, with values generally
+  separated by commas. It is simple and widely supported.
+- Excel: Stores spreadsheet data in workbook files, which can
+  contain multiple sheets, formulas and formatting.
+- JSON: Stores structured data using key-value pairs and arrays.
+  It is commonly used for exchanging data between applications
+  and web APIs.
+
+All three formats can represent sales records, but their internal
+structures are different.
+
+Q6. What is Pandas? What is a DataFrame?
+
+Answer:
+Pandas is a Python library used for data manipulation and analysis.
+It provides useful structures and functions for loading, cleaning,
+filtering, grouping and analyzing data.
+
+A DataFrame is a two-dimensional labeled data structure containing
+rows and columns, similar to a spreadsheet or database table.
+
+In this practical, all three file formats are loaded into Pandas
+DataFrames so that they can be analyzed in a consistent way.
+
+Q7. What is the difference between concat() and merge() in Pandas?
+
+Answer:
+concat() combines DataFrames along rows or columns. In this
+practical, it is used to place records from CSV, Excel and JSON
+one below another because they have the same columns.
+
+merge() combines DataFrames using one or more common columns,
+similar to a database join. For example, customer information
+could be joined with sales records using Customer_ID.
+
+Q8. What are missing values and how can we handle them?
+
+Answer:
+Missing values are data entries that are absent or unavailable.
+In Pandas, they are commonly represented by NaN or other missing
+value markers.
+
+Common handling methods include:
+- Removing rows or columns with missing values.
+- Replacing missing values with mean, median or mode, when suitable.
+- Using a fixed value when justified by the meaning of the data.
+- Using more advanced imputation methods.
+
+In this practical, the missing Quantity is replaced with 1 using
+fillna(1). This is an assumption for the sample dataset and should
+be justified in real applications.
+
+Q9. What is groupby() in Pandas? Why is it used here?
+
+Answer:
+groupby() divides data into groups based on one or more columns.
+We can then apply operations such as sum(), mean(), count() or
+maximum to each group.
+
+In this practical:
+    df.groupby('Product')['Total_Revenue'].sum()
+
+groups transactions by product and calculates the total revenue
+generated by each product. This helps compare product performance.
+
+Q10. Why did you use a bar chart and a line chart? What is the
+difference between them?
+
+Answer:
+A bar chart is mainly used to compare values across categories.
+Here, it compares the total revenue generated by Laptop, Mouse,
+Monitor, Keyboard and Tablet.
+
+A line chart is mainly used to show trends or changes over an
+ordered sequence, especially time. Here, it shows how daily
+revenue changes from one date to another.
+
+Therefore, the bar chart is suitable for product comparison,
+whereas the line chart is suitable for daily sales trends.
+
+============================================================
+6. ADDITIONAL QUICK-FIRE VIVA QUESTIONS
+============================================================
+
+1. What does read_csv() do?
+   It reads a CSV file and loads its contents into a DataFrame.
+
+2. What does read_excel() do?
+   It reads data from an Excel workbook into a DataFrame.
+
+3. What does read_json() do?
+   It reads JSON data and converts it into a DataFrame when the
+   JSON structure is compatible.
+
+4. What is to_csv()?
+   It writes a DataFrame to a CSV file.
+
+5. What is to_excel()?
+   It writes a DataFrame to an Excel file.
+
+6. What is json.dump()?
+   It serializes a Python object and writes it to a JSON file.
+
+7. Why is index=False used while saving?
+   It prevents the DataFrame index from being written as an
+   additional column.
+
+8. What does pd.concat() do?
+   It combines multiple Pandas objects along a selected axis.
+
+9. What does isnull().sum() return?
+   It returns the number of missing values in each column.
+
+10. What does drop_duplicates() do?
+    It removes repeated rows from a DataFrame.
+
+11. What does fillna() do?
+    It replaces missing values with a specified value or result.
+
+12. What does pd.to_datetime() do?
+    It converts date-like values into Pandas datetime values.
+
+13. What is a calculated column?
+    A new column derived from existing columns using an expression.
+    Total_Revenue is calculated from Price multiplied by Quantity.
+
+14. What is descriptive statistics?
+    It summarizes data using measures such as mean, median,
+    minimum, maximum and standard deviation.
+
+15. What is the difference between sum() and mean()?
+    sum() adds values, whereas mean() calculates their arithmetic
+    average.
+
+16. What is a categorical variable?
+    A variable that represents groups or labels, such as Product.
+
+17. What is a numerical variable?
+    A variable represented by numbers, such as Price or Quantity.
+
+18. What is an outlier?
+    An observation that is unusually far from the other values.
+    A box plot is commonly used to help identify outliers.
+
+19. What is Seaborn?
+    Seaborn is a Python data visualization library built on
+    Matplotlib. It provides a high-level interface for statistical
+    graphics.
+
+20. What is Matplotlib?
+    Matplotlib is a Python plotting library used to create charts
+    and visualizations.
+
+============================================================
+7. IMPORTANT OUTPUTS TO REMEMBER
+============================================================
+
+After cleaning:
+- Number of transaction rows: 10
+- Total revenue: 5445
+- Average transaction value: 544.5
+
+Product-wise revenue:
+- Laptop: 3600
+- Monitor: 900
+- Tablet: 450
+- Keyboard: 320
+- Mouse: 175
+
+Highest revenue product:
+Laptop, with total revenue of 3600.
+
+Charts:
+1. Bar chart: Sales Revenue by Product.
+2. Line chart: Daily Revenue Trend.
+
+============================================================
+8. LAST-MINUTE REVISION
+============================================================
+
+Remember this practical flow:
+
+CREATE FILES
+    CSV + Excel + JSON
+        |
+        v
+LOAD FILES
+    read_csv() + read_excel() + read_json()
+        |
+        v
+COMBINE DATA
+    pd.concat()
+        |
+        v
+CHECK AND CLEAN
+    isnull() + drop_duplicates() + fillna()
+    + str.capitalize() + to_datetime()
+        |
+        v
+CALCULATE REVENUE
+    Price x Quantity
+        |
+        v
+ANALYZE
+    sum() + mean() + groupby()
+        |
+        v
+VISUALIZE
+    Bar chart + Line chart
+
+Most important concepts to prepare:
+1. CSV, Excel and JSON.
+2. Pandas DataFrame.
+3. Data cleaning and missing values.
+4. concat() versus merge().
+5. groupby() and aggregation.
+6. Total revenue and average transaction value.
+7. Bar chart versus line chart.
+
+END OF DMV PRACTICAL 1
